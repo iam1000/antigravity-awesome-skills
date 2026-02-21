@@ -798,6 +798,36 @@
     errorBox.style.display="none";
     okBox.style.display="none";
   }
+  window.SC_OK = true;
+
+  async function checkHealth(){
+    try {
+      const r = await fetch("/.netlify/functions/sc-health");
+      const d = await r.json();
+      if(!d.ok){
+        window.SC_OK = false;
+        showBanner(d.message);
+        return false;
+      }
+      return true;
+    } catch {
+      window.SC_OK = false;
+      showBanner("Backend unavailable");
+      return false;
+    }
+  }
+
+  function showBanner(msg){
+    let b = document.getElementById("healthBanner");
+    if(!b){
+      b = document.createElement("div");
+      b.id = "healthBanner";
+      b.style.cssText = "position:fixed; top:0; left:0; width:100%; background:#ef4444; color:#fff; text-align:center; padding:12px; font-weight:bold; z-index:9999; font-size:14px; box-shadow:0 6px 20px rgba(0,0,0,0.6);";
+      document.body.appendChild(b);
+    }
+    b.textContent = msg;
+  }
+
   function setProgress(msg){ progressLine.textContent = msg || ""; }
 
   function normalizeUrl(u){
@@ -1698,8 +1728,14 @@
   }
 
   // ===== EVENTS =====
-  shuffleBtn.onclick = ()=> doShuffle(false);
-  nextArrow.onclick = ()=> doShuffle(false);
+  shuffleBtn.onclick = ()=> {
+    if (window.SC_OK === false) { showBanner("Missing SOUNDCLOUD_CLIENT_ID environment variable."); return; }
+    doShuffle(false);
+  };
+  nextArrow.onclick = ()=> {
+    if (window.SC_OK === false) return;
+    doShuffle(false);
+  };
   prevArrow.onclick = ()=>{ if(history.length>=2) loadItem(history[1], true); };
 
   openBtn.onclick = ()=> openBtn.dataset.url && window.open(openBtn.dataset.url, "_blank");
@@ -1714,6 +1750,7 @@
   clearHistory.onclick = ()=>{ history=[]; saveJsonLS(STORAGE_KEY_HISTORY, history); renderList(historyList, history, "history"); };
 
   autoDigBtn.onclick = async ()=>{
+    if (window.SC_OK === false) { showBanner("Missing SOUNDCLOUD_CLIENT_ID environment variable."); return; }
     try{
       await quickFill(genreSelect.value, true);
       await quickFill(genreSelect.value, true);
@@ -1742,7 +1779,12 @@
   searchLocalEl.addEventListener("input", ()=>{
     localSearch = (searchLocalEl.value||"").trim().toLowerCase();
   });
-  searchLocalEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter") doShuffle(false); });
+  searchLocalEl.addEventListener("keydown",(e)=>{
+    if(e.key==="Enter") {
+      if(window.SC_OK === false) { showBanner("Missing SOUNDCLOUD_CLIENT_ID environment variable."); return; }
+      doShuffle(false);
+    }
+  });
 
   statsToggle.onchange = ()=>{
     try{ localStorage.setItem(STORAGE_KEY_STATS, statsToggle.checked ? "1" : "0"); } catch {}
@@ -1895,6 +1937,9 @@
 
   // ===== INIT =====
   (async function init(){
+    const ok = await checkHealth();
+    if (!ok) return;
+
     const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
     setTheme(savedTheme === "dark" ? "dark" : "aqua");
 

@@ -1,12 +1,27 @@
+const CORS = {
+  "content-type": "application/json",
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "content-type",
+  "access-control-allow-methods": "GET,POST,OPTIONS",
+};
+
+function json(statusCode, obj) {
+  return new Response(JSON.stringify(obj), { status: statusCode, headers: CORS });
+}
+
+function clientIdMissing() {
+  const v = process.env.SOUNDCLOUD_CLIENT_ID;
+  return !v || v.trim() === "" || v === "YOUR_CLIENT_ID";
+}
+
 export default async (req, context) => {
   try {
-    const clientId = process.env.SOUNDCLOUD_CLIENT_ID;
-    if (!clientId) {
-      return new Response(
-        "Missing env var SOUNDCLOUD_CLIENT_ID. Set it in Netlify and redeploy.",
-        { status: 500 }
-      );
+    if (req.method === "OPTIONS") return new Response("", { status: 204, headers: CORS });
+    if (clientIdMissing()) {
+      return json(400, { error: "Missing SOUNDCLOUD_CLIENT_ID. Set it in your shell or Netlify env vars (see .env.example)." });
     }
+
+    const clientId = process.env.SOUNDCLOUD_CLIENT_ID;
 
     const url = new URL(req.url);
     const q = (url.searchParams.get("q") || "").trim();
@@ -47,10 +62,7 @@ export default async (req, context) => {
 
     return new Response(text, {
       status: 200,
-      headers: {
-        "content-type": "application/json",
-        "cache-control": "no-store",
-      },
+      headers: { ...CORS, "cache-control": "no-store" },
     });
   } catch (err) {
     return new Response(`Function error: ${String(err?.message || err)}`, { status: 500 });
