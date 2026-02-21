@@ -1,23 +1,19 @@
-const CORS = {
-  "content-type": "application/json",
-  "access-control-allow-origin": "*",
-  "access-control-allow-headers": "content-type",
-  "access-control-allow-methods": "GET,POST,OPTIONS",
-};
-
-export default async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("", { status: 204, headers: CORS });
-  }
-
-  const v = process.env.SOUNDCLOUD_CLIENT_ID;
-  const missing = !v || v.trim() === "" || v === "YOUR_CLIENT_ID";
-
-  return new Response(JSON.stringify({ 
-    ok: !missing,
-    message: missing ? "Missing or placeholder SOUNDCLOUD_CLIENT_ID" : "Healthy"
-  }), {
-    status: 200,
-    headers: CORS
-  });
+exports.handler = async () => {
+  const id = process.env.SOUNDCLOUD_CLIENT_ID;
+  const ok = !!id && id.trim() !== "" && id !== "YOUR_CLIENT_ID";
+  return {
+    statusCode: 200,
+    headers: {
+      "content-type": "application/json",
+      "access-control-allow-origin": "*",
+      "access-control-allow-headers": "content-type",
+      "access-control-allow-methods": "GET,POST,OPTIONS",
+    },
+    body: JSON.stringify({
+      ok,
+      message: ok
+        ? "SoundCloud client id detected."
+        : "Missing SOUNDCLOUD_CLIENT_ID. Set it in your shell or Netlify env vars (see .env.example).",
+    }),
+  };
 };
