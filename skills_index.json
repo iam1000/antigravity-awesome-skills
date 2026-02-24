@@ -2214,6 +2214,15 @@
     "source": "community"
   },
   {
+    "id": "chrome-extension-developer",
+    "path": "skills/chrome-extension-developer",
+    "category": "uncategorized",
+    "name": "chrome-extension-developer",
+    "description": "Expert guidance for building modern Chrome Extensions using Manifest V3, service workers, and message passing.",
+    "risk": "safe",
+    "source": "self"
+  },
+  {
     "id": "cicd-automation-workflow-automate",
     "path": "skills/cicd-automation-workflow-automate",
     "category": "uncategorized",
@@ -2356,6 +2365,15 @@
     "description": "This skill should be used when the user asks to \"perform cloud penetration testing\", \"assess Azure or AWS or GCP security\", \"enumerate cloud resources\", \"exploit cloud misconfiguratio...",
     "risk": "unknown",
     "source": "community"
+  },
+  {
+    "id": "cloudflare-workers-expert",
+    "path": "skills/cloudflare-workers-expert",
+    "category": "uncategorized",
+    "name": "cloudflare-workers-expert",
+    "description": "Best practices and architectural guidance for deploying and building applications on Cloudflare Workers and Pages using Wrangler and Hono.",
+    "risk": "safe",
+    "source": "self"
   },
   {
     "id": "coda-automation",
@@ -7996,7 +8014,7 @@
     "path": "skills/web-design-guidelines",
     "category": "uncategorized",
     "name": "web-design-guidelines",
-    "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to \\\"review my UI\\\", \\\"check accessibility\\\", \\\"audit design\\\", \\\"review UX\\\", or \\\"check my site aga...",
+    "description": "Review UI code for Web Interface Guidelines compliance. Use when asked to /\"review my UI/\", /\"check accessibility/\", /\"audit design/\", /\"review UX/\", or /\"check my site aga...",
     "risk": "unknown",
     "source": "community"
   },
