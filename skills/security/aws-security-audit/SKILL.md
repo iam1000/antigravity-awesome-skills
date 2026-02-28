@@ -1,6 +1,6 @@
 ---
 name: aws-security-audit
-description: "Comprehensive AWS security posture assessment using AWS CLI and security best practices"
+description: Comprehensive AWS security posture assessment using AWS CLI and security best practices
 category: security
 risk: safe
 source: community

@@ -1,6 +1,6 @@
 ---
 name: aws-iam-best-practices
-description: "IAM policy review, hardening, and least privilege implementation"
+description: IAM policy review, hardening, and least privilege implementation
 category: security
 risk: safe
 source: community

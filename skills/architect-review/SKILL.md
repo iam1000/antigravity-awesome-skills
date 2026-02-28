@@ -1,6 +1,6 @@
 ---
 name: architect-review
-description: "Master software architect specializing in modern architecture"
+description: Master software architect specializing in modern architecture
 risk: unknown
 source: community
 date_added: "2026-02-27"

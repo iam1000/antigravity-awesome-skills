@@ -1,6 +1,15 @@
 ---
 name: hig-components-dialogs
 description: >-
+  Apple HIG guidance for presentation components including alerts, action sheets,
+  popovers, sheets, and digit entry views. Use this skill when the user says
+  "should I use an alert or a sheet," "how do I show a confirmation dialog,"
+  "when should I use a popover," "my modals are annoying users," or asks about
+  alert design, action sheet, popover, sheet, modal, dialog, digit entry,
+  confirmation dialog, warning dialog, modal presentation, non-modal content,
+  destructive action confirmation, or overlay UI patterns. Cross-references:
+  hig-components-menus, hig-components-controls, hig-components-search,
+  hig-patterns.
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -34,13 +43,13 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ## Reference Index
 
-| Reference | Topic | Key content |
-|---|---|---|
-| [alerts.md](references/alerts.md) | Alerts | Button ordering, title/message text, confirmation, destructive actions |
-| [action-sheets.md](references/action-sheets.md) | Action sheets | Multiple actions, cancel option, destructive handling |
-| [popovers.md](references/popovers.md) | Popovers | Non-modal, dismiss on tap outside, iPad/Mac |
-| [sheets.md](references/sheets.md) | Sheets | Modal task, context preservation |
-| [digit-entry-views.md](references/digit-entry-views.md) | Digit entry | PIN input, autofill, auto-advance |
+| Reference                                               | Topic         | Key content                                                            |
+| ------------------------------------------------------- | ------------- | ---------------------------------------------------------------------- |
+| [alerts.md](references/alerts.md)                       | Alerts        | Button ordering, title/message text, confirmation, destructive actions |
+| [action-sheets.md](references/action-sheets.md)         | Action sheets | Multiple actions, cancel option, destructive handling                  |
+| [popovers.md](references/popovers.md)                   | Popovers      | Non-modal, dismiss on tap outside, iPad/Mac                            |
+| [sheets.md](references/sheets.md)                       | Sheets        | Modal task, context preservation                                       |
+| [digit-entry-views.md](references/digit-entry-views.md) | Digit entry   | PIN input, autofill, auto-advance                                      |
 
 ## Output Format
 
@@ -66,7 +75,8 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ---
 
-*Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)*
+_Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)_
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

@@ -1,6 +1,10 @@
 ---
 name: copywriting
-description: Write rigorous, conversion-focused marketing copy for landing pages and emails. Enforces brief confirmation and strict no-fabrication rules.
+description: >
+  Use this skill when writing, rewriting, or improving marketing copy
+  for any page (homepage, landing page, pricing, feature, product, or about page).
+  This skill produces clear, compelling, and testable copy while enforcing
+  alignment, honesty, and conversion best practices.
 risk: unknown
 source: community
 date_added: "2026-02-27"

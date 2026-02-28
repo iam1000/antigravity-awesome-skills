@@ -1,6 +1,10 @@
 ---
 name: ios-developer
 description: |
+  Develop native iOS applications with Swift/SwiftUI. Masters iOS 18,
+  SwiftUI, UIKit integration, Core Data, networking, and App Store optimization.
+  Use PROACTIVELY for iOS-specific features, App Store optimization, or native
+  iOS development.
 risk: unknown
 source: community
 date_added: "2026-02-27"

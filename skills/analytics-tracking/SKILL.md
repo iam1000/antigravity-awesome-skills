@@ -1,6 +1,6 @@
 ---
 name: analytics-tracking
-description: >
+description: Design, audit, and improve analytics tracking systems that produce reliable, decision-ready data. Use when the user wants to set up, fix, or evaluate analytics tracking (GA4, GTM, product analytics, events, conversions, UTMs). This skill focuses on measurement strategy, signal quality, and validation—not just firing events.
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -29,10 +29,10 @@ This index answers:
 
 It prevents:
 
-* event sprawl
-* vanity tracking
-* misleading conversion data
-* false confidence in broken analytics
+- event sprawl
+- vanity tracking
+- misleading conversion data
+- false confidence in broken analytics
 
 ---
 
@@ -62,50 +62,50 @@ This is a **diagnostic score**, not a performance KPI.
 
 #### 1. Decision Alignment (0–25)
 
-* Clear business questions defined
-* Each tracked event maps to a decision
-* No events tracked “just in case”
+- Clear business questions defined
+- Each tracked event maps to a decision
+- No events tracked “just in case”
 
 ---
 
 #### 2. Event Model Clarity (0–20)
 
-* Events represent **meaningful actions**
-* Naming conventions are consistent
-* Properties carry context, not noise
+- Events represent **meaningful actions**
+- Naming conventions are consistent
+- Properties carry context, not noise
 
 ---
 
 #### 3. Data Accuracy & Integrity (0–20)
 
-* Events fire reliably
-* No duplication or inflation
-* Values are correct and complete
-* Cross-browser and mobile validated
+- Events fire reliably
+- No duplication or inflation
+- Values are correct and complete
+- Cross-browser and mobile validated
 
 ---
 
 #### 4. Conversion Definition Quality (0–15)
 
-* Conversions represent real success
-* Conversion counting is intentional
-* Funnel stages are distinguishable
+- Conversions represent real success
+- Conversion counting is intentional
+- Funnel stages are distinguishable
 
 ---
 
 #### 5. Attribution & Context (0–10)
 
-* UTMs are consistent and complete
-* Traffic source context is preserved
-* Cross-domain / cross-device handled appropriately
+- UTMs are consistent and complete
+- Traffic source context is preserved
+- Cross-domain / cross-device handled appropriately
 
 ---
 
 #### 6. Governance & Maintenance (0–10)
 
-* Tracking is documented
-* Ownership is clear
-* Changes are versioned and monitored
+- Tracking is documented
+- Ownership is clear
+- Changes are versioned and monitored
 
 ---
 
@@ -128,25 +128,25 @@ If verdict is **Broken**, stop and recommend remediation first.
 
 ### 1. Business Context
 
-* What decisions will this data inform?
-* Who uses the data (marketing, product, leadership)?
-* What actions will be taken based on insights?
+- What decisions will this data inform?
+- Who uses the data (marketing, product, leadership)?
+- What actions will be taken based on insights?
 
 ---
 
 ### 2. Current State
 
-* Tools in use (GA4, GTM, Mixpanel, Amplitude, etc.)
-* Existing events and conversions
-* Known issues or distrust in data
+- Tools in use (GA4, GTM, Mixpanel, Amplitude, etc.)
+- Existing events and conversions
+- Known issues or distrust in data
 
 ---
 
 ### 3. Technical & Compliance Context
 
-* Tech stack and rendering model
-* Who implements and maintains tracking
-* Privacy, consent, and regulatory constraints
+- Tech stack and rendering model
+- Who implements and maintains tracking
+- Privacy, consent, and regulatory constraints
 
 ---
 
@@ -162,9 +162,9 @@ If no decision depends on it, **don’t track it**.
 
 Define:
 
-* What you need to know
-* What action you’ll take
-* What signal proves it
+- What you need to know
+- What action you’ll take
+- What signal proves it
 
 Then design events.
 
@@ -174,15 +174,15 @@ Then design events.
 
 Avoid:
 
-* cosmetic clicks
-* redundant events
-* UI noise
+- cosmetic clicks
+- redundant events
+- UI noise
 
 Prefer:
 
-* intent
-* completion
-* commitment
+- intent
+- completion
+- commitment
 
 ---
 
@@ -198,27 +198,27 @@ Fewer accurate events > many unreliable ones.
 
 **Navigation / Exposure**
 
-* page_view (enhanced)
-* content_viewed
-* pricing_viewed
+- page_view (enhanced)
+- content_viewed
+- pricing_viewed
 
 **Intent Signals**
 
-* cta_clicked
-* form_started
-* demo_requested
+- cta_clicked
+- form_started
+- demo_requested
 
 **Completion Signals**
 
-* signup_completed
-* purchase_completed
-* subscription_changed
+- signup_completed
+- purchase_completed
+- subscription_changed
 
 **System / State Changes**
 
-* onboarding_completed
-* feature_activated
-* error_occurred
+- onboarding_completed
+- feature_activated
+- error_occurred
 
 ---
 
@@ -232,17 +232,17 @@ object_action[_context]
 
 Examples:
 
-* signup_completed
-* pricing_viewed
-* cta_hero_clicked
-* onboarding_step_completed
+- signup_completed
+- pricing_viewed
+- cta_hero_clicked
+- onboarding_step_completed
 
 Rules:
 
-* lowercase
-* underscores
-* no spaces
-* no ambiguity
+- lowercase
+- underscores
+- no spaces
+- no ambiguity
 
 ---
 
@@ -250,15 +250,15 @@ Rules:
 
 Include:
 
-* where (page, section)
-* who (user_type, plan)
-* how (method, variant)
+- where (page, section)
+- who (user_type, plan)
+- how (method, variant)
 
 Avoid:
 
-* PII
-* free-text fields
-* duplicated auto-properties
+- PII
+- free-text fields
+- duplicated auto-properties
 
 ---
 
@@ -268,41 +268,41 @@ Avoid:
 
 A conversion must represent:
 
-* real value
-* completed intent
-* irreversible progress
+- real value
+- completed intent
+- irreversible progress
 
 Examples:
 
-* signup_completed
-* purchase_completed
-* demo_booked
+- signup_completed
+- purchase_completed
+- demo_booked
 
 Not conversions:
 
-* page views
-* button clicks
-* form starts
+- page views
+- button clicks
+- form starts
 
 ---
 
 ### Conversion Counting Rules
 
-* Once per session vs every occurrence
-* Explicitly documented
-* Consistent across tools
+- Once per session vs every occurrence
+- Explicitly documented
+- Consistent across tools
 
 ---
 
 ## GA4 & GTM (Implementation Guidance)
 
-*(Tool-specific, but optional)*
+_(Tool-specific, but optional)_
 
-* Prefer GA4 recommended events
-* Use GTM for orchestration, not logic
-* Push clean dataLayer events
-* Avoid multiple containers
-* Version every publish
+- Prefer GA4 recommended events
+- Use GTM for orchestration, not logic
+- Push clean dataLayer events
+- Avoid multiple containers
+- Version every publish
 
 ---
 
@@ -310,10 +310,10 @@ Not conversions:
 
 ### UTM Rules
 
-* lowercase only
-* consistent separators
-* documented centrally
-* never overwritten client-side
+- lowercase only
+- consistent separators
+- documented centrally
+- never overwritten client-side
 
 UTMs exist to **explain performance**, not inflate numbers.
 
@@ -323,28 +323,28 @@ UTMs exist to **explain performance**, not inflate numbers.
 
 ### Required Validation
 
-* Real-time verification
-* Duplicate detection
-* Cross-browser testing
-* Mobile testing
-* Consent-state testing
+- Real-time verification
+- Duplicate detection
+- Cross-browser testing
+- Mobile testing
+- Consent-state testing
 
 ### Common Failure Modes
 
-* double firing
-* missing properties
-* broken attribution
-* PII leakage
-* inflated conversions
+- double firing
+- missing properties
+- broken attribution
+- PII leakage
+- inflated conversions
 
 ---
 
 ## Privacy & Compliance
 
-* Consent before tracking where required
-* Data minimization
-* User deletion support
-* Retention policies reviewed
+- Consent before tracking where required
+- Data minimization
+- User deletion support
+- Retention policies reviewed
 
 Analytics that violate trust undermine optimization.
 
@@ -354,9 +354,9 @@ Analytics that violate trust undermine optimization.
 
 ### Measurement Strategy Summary
 
-* Measurement Readiness Index score + verdict
-* Key risks and gaps
-* Recommended remediation order
+- Measurement Readiness Index score + verdict
+- Key risks and gaps
+- Recommended remediation order
 
 ---
 
@@ -376,9 +376,9 @@ Analytics that violate trust undermine optimization.
 
 ### Implementation Notes
 
-* Tool-specific setup
-* Ownership
-* Validation steps
+- Tool-specific setup
+- Ownership
+- Validation steps
 
 ---
 
@@ -394,12 +394,13 @@ Analytics that violate trust undermine optimization.
 
 ## Related Skills
 
-* **page-cro** – Uses this data for optimization
-* **ab-test-setup** – Requires clean conversions
-* **seo-audit** – Organic performance analysis
-* **programmatic-seo** – Scale requires reliable signals
+- **page-cro** – Uses this data for optimization
+- **ab-test-setup** – Requires clean conversions
+- **seo-audit** – Organic performance analysis
+- **programmatic-seo** – Scale requires reliable signals
 
 ---
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

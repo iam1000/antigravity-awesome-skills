@@ -1,6 +1,13 @@
 ---
 name: customs-trade-compliance
 description: >
+  Codified expertise for customs documentation, tariff classification, duty
+  optimisation, restricted party screening, and regulatory compliance across
+  multiple jurisdictions. Informed by trade compliance specialists with 15+
+  years experience. Includes HS classification logic, Incoterms application,
+  FTA utilisation, and penalty mitigation. Use when handling customs clearance,
+  tariff classification, trade compliance, import/export documentation, or
+  duty optimisation.
 risk: safe
 source: "https://github.com/ai-evos/agent-skills"
 date_added: "2026-02-27"

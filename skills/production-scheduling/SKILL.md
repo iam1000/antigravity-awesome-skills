@@ -1,6 +1,13 @@
 ---
 name: production-scheduling
 description: >
+  Codified expertise for production scheduling, job sequencing, line balancing,
+  changeover optimisation, and bottleneck resolution in discrete and batch
+  manufacturing. Informed by production schedulers with 15+ years experience.
+  Includes TOC/drum-buffer-rope, SMED, OEE analysis, disruption response
+  frameworks, and ERP/MES interaction patterns. Use when scheduling production,
+  resolving bottlenecks, optimising changeovers, responding to disruptions,
+  or balancing manufacturing lines.
 risk: safe
 source: "https://github.com/ai-evos/agent-skills"
 date_added: "2026-02-27"

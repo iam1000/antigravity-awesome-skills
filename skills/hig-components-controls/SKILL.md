@@ -1,6 +1,16 @@
 ---
 name: hig-components-controls
-description: >-
+description: |
+  Apple HIG guidance for selection and input controls including pickers, toggles,
+  sliders, steppers, segmented controls, combo boxes, text fields, text views,
+  labels, token fields, virtual keyboards, rating indicators, and gauges. Use
+  this skill when the user says "picker or segmented control," "how should my
+  form look," "what keyboard type should I use," "toggle vs checkbox," or asks
+  about picker design, toggle, switch, slider, stepper, text field, text input,
+  segmented control, combo box, label, token field, virtual keyboard, rating
+  indicator, gauge, form design, input validation, or control state management.
+  Cross-references: hig-components-menus, hig-components-dialogs,
+  hig-components-search.
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -36,22 +46,22 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ## Reference Index
 
-| Reference | Topic | Key content |
-|---|---|---|
-| [controls.md](references/controls.md) | General controls | States, affordance, system controls |
-| [toggles.md](references/toggles.md) | Toggles | On/off, immediate effect |
-| [segmented-controls.md](references/segmented-controls.md) | Segmented controls | 2-5 options, equal weight |
-| [sliders.md](references/sliders.md) | Sliders | Continuous range, min/max labels |
-| [steppers.md](references/steppers.md) | Steppers | Fixed steps, bounded values |
-| [pickers.md](references/pickers.md) | Pickers | Dates, times, long option sets |
-| [combo-boxes.md](references/combo-boxes.md) | Combo boxes | macOS, type or select, custom values |
-| [text-fields.md](references/text-fields.md) | Text fields | Short input, keyboard types, validation |
-| [text-views.md](references/text-views.md) | Text views | Multi-line, comments, descriptions |
-| [labels.md](references/labels.md) | Labels | Placement, VoiceOver support |
-| [token-fields.md](references/token-fields.md) | Token fields | macOS, chips, tags, recipients |
-| [virtual-keyboards.md](references/virtual-keyboards.md) | Virtual keyboards | Email, URL, number keyboard types |
-| [rating-indicators.md](references/rating-indicators.md) | Rating indicators | Star ratings, display-only |
-| [gauges.md](references/gauges.md) | Gauges | Level indicators, range display |
+| Reference                                                 | Topic              | Key content                             |
+| --------------------------------------------------------- | ------------------ | --------------------------------------- |
+| [controls.md](references/controls.md)                     | General controls   | States, affordance, system controls     |
+| [toggles.md](references/toggles.md)                       | Toggles            | On/off, immediate effect                |
+| [segmented-controls.md](references/segmented-controls.md) | Segmented controls | 2-5 options, equal weight               |
+| [sliders.md](references/sliders.md)                       | Sliders            | Continuous range, min/max labels        |
+| [steppers.md](references/steppers.md)                     | Steppers           | Fixed steps, bounded values             |
+| [pickers.md](references/pickers.md)                       | Pickers            | Dates, times, long option sets          |
+| [combo-boxes.md](references/combo-boxes.md)               | Combo boxes        | macOS, type or select, custom values    |
+| [text-fields.md](references/text-fields.md)               | Text fields        | Short input, keyboard types, validation |
+| [text-views.md](references/text-views.md)                 | Text views         | Multi-line, comments, descriptions      |
+| [labels.md](references/labels.md)                         | Labels             | Placement, VoiceOver support            |
+| [token-fields.md](references/token-fields.md)             | Token fields       | macOS, chips, tags, recipients          |
+| [virtual-keyboards.md](references/virtual-keyboards.md)   | Virtual keyboards  | Email, URL, number keyboard types       |
+| [rating-indicators.md](references/rating-indicators.md)   | Rating indicators  | Star ratings, display-only              |
+| [gauges.md](references/gauges.md)                         | Gauges             | Level indicators, range display         |
 
 ## Output Format
 
@@ -77,7 +87,8 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ---
 
-*Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)*
+_Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)_
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

@@ -1,6 +1,14 @@
 ---
 name: hig-components-search
 description: >-
+  Apple HIG guidance for navigation-related components including search fields,
+  page controls, and path controls. Use this skill when the user says "how should
+  search work in my app," "I need a breadcrumb," "how do I paginate content," or
+  asks about search field, search bar, page control, path control, breadcrumb,
+  navigation component, search UX, search suggestions, search scopes, paginated
+  content navigation, or file path hierarchy display. Cross-references:
+  hig-components-menus, hig-components-controls, hig-components-dialogs,
+  hig-patterns.
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -30,11 +38,11 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ## Reference Index
 
-| Reference | Topic | Key content |
-|---|---|---|
+| Reference                                       | Topic         | Key content                                |
+| ----------------------------------------------- | ------------- | ------------------------------------------ |
 | [search-fields.md](references/search-fields.md) | Search fields | Scopes, tokens, instant results, placement |
-| [page-controls.md](references/page-controls.md) | Page controls | Dot indicators, flat page sequences |
-| [path-controls.md](references/path-controls.md) | Path controls | Breadcrumbs, ancestor navigation |
+| [page-controls.md](references/page-controls.md) | Page controls | Dot indicators, flat page sequences        |
+| [path-controls.md](references/path-controls.md) | Path controls | Breadcrumbs, ancestor navigation           |
 
 ## Output Format
 
@@ -59,7 +67,8 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ---
 
-*Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)*
+_Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)_
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

@@ -1,6 +1,13 @@
 ---
 name: hig-project-context
 description: >-
+  Create or update a shared Apple design context document that other HIG skills
+  use to tailor guidance. Use when the user says "set up my project context,"
+  "what platforms am I targeting," "configure HIG settings," or when starting a
+  new Apple platform project. Also activates when other HIG skills need project
+  context but none exists yet. This skill creates .claude/apple-design-context.md
+  so that hig-foundations, hig-platforms, hig-components-*, hig-inputs, and
+  hig-technologies can provide targeted advice without repetitive questions
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -26,36 +33,43 @@ Before asking questions, auto-discover context from:
 Present findings and ask the user to confirm or correct. Then gather anything still missing:
 
 ### 1. Product Overview
+
 - What does the app do? (one sentence)
 - Category (productivity, social, health, game, utility, etc.)
 - Stage (concept, development, shipped, redesign)
 
 ### 2. Target Platforms
+
 - Which Apple platforms? (iOS, iPadOS, macOS, tvOS, watchOS, visionOS)
 - Minimum OS versions
 - Universal or platform-specific?
 
 ### 3. Technology Stack
+
 - UI framework: SwiftUI, UIKit, AppKit, or mixed?
 - Architecture: single-window, multi-window, document-based?
 - Apple technologies in use? (HealthKit, CloudKit, ARKit, etc.)
 
 ### 4. Design System
+
 - System defaults or custom design system?
 - Brand colors, fonts, icon style?
 - Dark mode and Dynamic Type support status
 
 ### 5. Accessibility Requirements
+
 - Target level (baseline, enhanced, comprehensive)
 - Specific considerations (VoiceOver, Switch Control, etc.)
 - Regulatory requirements (WCAG, Section 508)
 
 ### 6. User Context
+
 - Primary personas (1-3)
 - Key use cases and environments (desk, on-the-go, glanceable, immersive)
 - Known pain points or design challenges
 
 ### 7. Existing Design Assets
+
 - Figma/Sketch files?
 - Apple Design Resources in use?
 - Existing component library?
@@ -68,14 +82,16 @@ Generate `.claude/apple-design-context.md` using this structure:
 # Apple Design Context
 
 ## Product
+
 - **Name**: [App name]
 - **Description**: [One sentence]
 - **Category**: [Category]
 - **Stage**: [Concept / Development / Shipped / Redesign]
 
 ## Platforms
+
 | Platform | Supported | Min OS | Notes |
-|----------|-----------|--------|-------|
+| -------- | --------- | ------ | ----- |
 | iOS      | Yes/No    |        |       |
 | iPadOS   | Yes/No    |        |       |
 | macOS    | Yes/No    |        |       |
@@ -84,11 +100,13 @@ Generate `.claude/apple-design-context.md` using this structure:
 | visionOS | Yes/No    |        |       |
 
 ## Technology
+
 - **UI Framework**: [SwiftUI / UIKit / AppKit / Mixed]
 - **Architecture**: [Single-window / Multi-window / Document-based]
 - **Apple Technologies**: [List any: HealthKit, CloudKit, ARKit, etc.]
 
 ## Design System
+
 - **Base**: [System defaults / Custom design system]
 - **Brand Colors**: [List or reference]
 - **Typography**: [System fonts / Custom fonts]
@@ -96,10 +114,12 @@ Generate `.claude/apple-design-context.md` using this structure:
 - **Dynamic Type**: [Supported / Not yet / N/A]
 
 ## Accessibility
+
 - **Target Level**: [Baseline / Enhanced / Comprehensive]
 - **Key Considerations**: [List any specific needs]
 
 ## Users
+
 - **Primary Persona**: [Description]
 - **Key Use Cases**: [List]
 - **Known Challenges**: [List]
@@ -119,13 +139,14 @@ When updating an existing context document:
 - **hig-platforms** -- Platform-specific guidance
 - **hig-foundations** -- Color, typography, layout decisions
 - **hig-patterns** -- UX pattern recommendations
-- **hig-components-*** -- Component recommendations
+- **hig-components-\*** -- Component recommendations
 - **hig-inputs** -- Input method coverage
 - **hig-technologies** -- Apple technology relevance
 
 ---
 
-*Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)*
+_Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)_
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

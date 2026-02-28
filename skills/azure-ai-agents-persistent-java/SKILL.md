@@ -1,6 +1,8 @@
 ---
 name: azure-ai-agents-persistent-java
 description: |
+  Azure AI Agents Persistent SDK for Java. Low-level SDK for creating and managing AI agents with threads, messages, runs, and tools.
+  Triggers: "PersistentAgentsClient", "persistent agents java", "agent threads java", "agent runs java", "streaming agents java".
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -47,9 +49,9 @@ The Azure AI Agents Persistent SDK provides a low-level API for managing persist
 
 ### Client Hierarchy
 
-| Client | Purpose |
-|--------|---------|
-| `PersistentAgentsClient` | Sync client for agent operations |
+| Client                        | Purpose                           |
+| ----------------------------- | --------------------------------- |
+| `PersistentAgentsClient`      | Sync client for agent operations  |
 | `PersistentAgentsAsyncClient` | Async client for agent operations |
 
 ## Core Workflow
@@ -131,10 +133,11 @@ try {
 
 ## Reference Links
 
-| Resource | URL |
-|----------|-----|
-| Maven Package | https://central.sonatype.com/artifact/com.azure/azure-ai-agents-persistent |
+| Resource      | URL                                                                                     |
+| ------------- | --------------------------------------------------------------------------------------- |
+| Maven Package | https://central.sonatype.com/artifact/com.azure/azure-ai-agents-persistent              |
 | GitHub Source | https://github.com/Azure/azure-sdk-for-java/tree/main/sdk/ai/azure-ai-agents-persistent |
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.

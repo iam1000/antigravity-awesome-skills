@@ -1,6 +1,12 @@
 ---
 name: carrier-relationship-management
 description: >
+  Codified expertise for managing carrier portfolios, negotiating freight rates,
+  tracking carrier performance, allocating freight, and maintaining strategic
+  carrier relationships. Informed by transportation managers with 15+ years
+  experience. Includes scorecarding frameworks, RFP processes, market intelligence,
+  and compliance vetting. Use when managing carriers, negotiating rates, evaluating
+  carrier performance, or building freight strategies.
 risk: safe
 source: "https://github.com/ai-evos/agent-skills"
 date_added: "2026-02-27"

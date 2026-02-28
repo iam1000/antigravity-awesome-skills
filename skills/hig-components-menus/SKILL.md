@@ -1,6 +1,15 @@
 ---
 name: hig-components-menus
 description: >-
+  Apple HIG guidance for menu and button components including menus, context menus,
+  dock menus, edit menus, the menu bar, toolbars, action buttons, pop-up buttons,
+  pull-down buttons, disclosure controls, and standard buttons. Use this skill
+  when the user says "how should my buttons look," "what goes in the menu bar,"
+  "should I use a context menu or action sheet," "how do I design a toolbar," or
+  asks about button design, menu design, context menu, toolbar, menu bar, action
+  button, pop-up button, pull-down button, disclosure control, dock menu, edit
+  menu, or any menu/button component layout and behavior. Cross-references:
+  hig-components-search, hig-components-controls, hig-components-dialogs.
 risk: unknown
 source: community
 date_added: "2026-02-27"
@@ -34,19 +43,19 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ## Reference Index
 
-| Reference | Topic | Key content |
-|---|---|---|
-| [menus.md](references/menus.md) | General menu design | Item ordering, grouping, shortcuts |
-| [context-menus.md](references/context-menus.md) | Context menus | Right-click, long press, secondary actions |
-| [dock-menus.md](references/dock-menus.md) | Dock menus | macOS app-level actions, running state |
-| [edit-menus.md](references/edit-menus.md) | Edit menus | Undo, copy, paste, standard items |
-| [the-menu-bar.md](references/the-menu-bar.md) | Menu bar | macOS primary command interface, structure |
-| [toolbars.md](references/toolbars.md) | Toolbars | Frequent actions, customization, placement |
-| [buttons.md](references/buttons.md) | Buttons | System styles, sizing, affordance |
-| [action-button.md](references/action-button.md) | Action button | Grouped secondary actions, toolbar use |
-| [pop-up-buttons.md](references/pop-up-buttons.md) | Pop-up buttons | Mutually exclusive choice selection |
-| [pull-down-buttons.md](references/pull-down-buttons.md) | Pull-down buttons | Action lists, no current selection |
-| [disclosure-controls.md](references/disclosure-controls.md) | Disclosure controls | Progressive disclosure, show/hide |
+| Reference                                                   | Topic               | Key content                                |
+| ----------------------------------------------------------- | ------------------- | ------------------------------------------ |
+| [menus.md](references/menus.md)                             | General menu design | Item ordering, grouping, shortcuts         |
+| [context-menus.md](references/context-menus.md)             | Context menus       | Right-click, long press, secondary actions |
+| [dock-menus.md](references/dock-menus.md)                   | Dock menus          | macOS app-level actions, running state     |
+| [edit-menus.md](references/edit-menus.md)                   | Edit menus          | Undo, copy, paste, standard items          |
+| [the-menu-bar.md](references/the-menu-bar.md)               | Menu bar            | macOS primary command interface, structure |
+| [toolbars.md](references/toolbars.md)                       | Toolbars            | Frequent actions, customization, placement |
+| [buttons.md](references/buttons.md)                         | Buttons             | System styles, sizing, affordance          |
+| [action-button.md](references/action-button.md)             | Action button       | Grouped secondary actions, toolbar use     |
+| [pop-up-buttons.md](references/pop-up-buttons.md)           | Pop-up buttons      | Mutually exclusive choice selection        |
+| [pull-down-buttons.md](references/pull-down-buttons.md)     | Pull-down buttons   | Action lists, no current selection         |
+| [disclosure-controls.md](references/disclosure-controls.md) | Disclosure controls | Progressive disclosure, show/hide          |
 
 ## Output Format
 
@@ -71,7 +80,8 @@ Check for `.claude/apple-design-context.md` before asking questions. Use existin
 
 ---
 
-*Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)*
+_Built by [Raintree Technology](https://raintree.technology) · [More developer tools](https://raintree.technology)_
 
 ## When to Use
+
 This skill is applicable to execute the workflow or actions described in the overview.
