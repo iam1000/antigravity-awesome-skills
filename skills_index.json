@@ -8720,6 +8720,16 @@
     "date_added": "2026-02-27"
   },
   {
+    "id": "pipecat-friday-agent",
+    "path": "skills/pipecat-friday-agent",
+    "category": "voice-agents",
+    "name": "pipecat-friday-agent",
+    "description": "Build a low-latency, Iron Man-inspired tactical voice assistant (F.R.I.D.A.Y.) using Pipecat, Gemini, and OpenAI.",
+    "risk": "safe",
+    "source": "community",
+    "date_added": "2026-03-10"
+  },
+  {
     "id": "pipedrive-automation",
     "path": "skills/pipedrive-automation",
     "category": "uncategorized",
