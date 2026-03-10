@@ -966,6 +966,10 @@
     const STORAGE_KEY_PLAYEDMAP = "residencyPlayedMap_v12";
     const STORAGE_KEY_THEME = "residencyTheme_v4";
     const STORAGE_KEY_STATS = "residencyShowStats_v3";
+    const STORAGE_KEY_GENRE = "residencyGenre_v1";
+    const STORAGE_KEY_SOURCE = "residencySource_v1";
+    const STORAGE_KEY_STATION = "residencyStation_v1";
+    const STORAGE_KEY_RANGE = "residencyRange_v1";
 
     const DB_NAME = "residencyDB_v16";
     const DB_STORE = "kv";
@@ -2099,9 +2103,19 @@
 
     exportBtn.onclick = downloadExport;
 
-    genreSelect.onchange = () => { resetContext(); doShuffle(false); };
-    sourceSelect.onchange = () => { resetContext(); doShuffle(false); };
-    stationSelect.onchange = () => { stationId = stationSelect.value || "__all__"; resetContext(); doShuffle(false); };
+    genreSelect.onchange = () => {
+      try { localStorage.setItem(STORAGE_KEY_GENRE, genreSelect.value); } catch { }
+      resetContext(); doShuffle(false);
+    };
+    sourceSelect.onchange = () => {
+      try { localStorage.setItem(STORAGE_KEY_SOURCE, sourceSelect.value); } catch { }
+      resetContext(); doShuffle(false);
+    };
+    stationSelect.onchange = () => {
+      stationId = stationSelect.value || "__all__";
+      try { localStorage.setItem(STORAGE_KEY_STATION, stationId); } catch { }
+      resetContext(); doShuffle(false);
+    };
     makeStationBtn.onclick = createStation;
 
     clearStationsBtn.onclick = () => {
@@ -2112,7 +2126,10 @@
       clearPlayedAll(); resetContext();
     };
 
-    obscureRange.oninput = () => updateModeLabel();
+    obscureRange.oninput = () => {
+      try { localStorage.setItem(STORAGE_KEY_RANGE, obscureRange.value); } catch { }
+      updateModeLabel();
+    };
     searchLocalEl.addEventListener("input", () => {
       localSearch = (searchLocalEl.value || "").trim().toLowerCase();
     });
@@ -2287,7 +2304,17 @@
       playedMap = loadJsonLS(STORAGE_KEY_PLAYEDMAP, {}) || {};
       stations = loadJsonLS(STORAGE_KEY_STATIONS, []);
       if (!Array.isArray(stations)) stations = [];
-      stationId = "__all__";
+
+      // Restore persisted filter/station selections
+      const savedGenre = localStorage.getItem(STORAGE_KEY_GENRE);
+      if (savedGenre) genreSelect.value = savedGenre;
+      const savedSource = localStorage.getItem(STORAGE_KEY_SOURCE);
+      if (savedSource) sourceSelect.value = savedSource;
+      const savedRange = localStorage.getItem(STORAGE_KEY_RANGE);
+      if (savedRange) obscureRange.value = savedRange;
+
+      const savedStation = localStorage.getItem(STORAGE_KEY_STATION);
+      stationId = (savedStation && stations.some(s => s.id === savedStation)) ? savedStation : "__all__";
       renderStationsSelect();
 
       const fromDb = await idbGet(STORAGE_KEY_LIBRARY);
