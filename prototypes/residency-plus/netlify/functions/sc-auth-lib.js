@@ -189,7 +189,7 @@ export function logTelemetry(eventName, payload = {}) {
   const axiomDomain = process.env.AXIOM_DOMAIN;
 
   if (axiomToken && axiomDataset && axiomDomain) {
-    const ingestUrl = `https://${axiomDomain}/v1/datasets/${axiomDataset}/ingest`;
+    const ingestUrl = `https://${axiomDomain}/v1/ingest/${axiomDataset}`;
 
     // Fire-and-forget: we do not await this, so we don't block the client response.
     // Netlify functions normally allow background promises to finish shortly after return.
@@ -199,7 +199,7 @@ export function logTelemetry(eventName, payload = {}) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${axiomToken}`
       },
-      // Axiom /v1/datasets/:id/ingest accepts an array of events
+      // Axiom /v1/ingest/:dataset accepts an array of events
       body: JSON.stringify([entry])
     }).catch(err => {
       // Swallow forwarding errors silently to protect core functionality
