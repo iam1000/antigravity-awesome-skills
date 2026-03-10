@@ -442,6 +442,102 @@
       }
     }
 
+    /* ===== Mobile (≤640px) ===== */
+    @media (max-width: 640px) {
+      body {
+        padding: 14px 8px 40px;
+      }
+
+      .shell {
+        padding: 12px 10px;
+        border-radius: 22px;
+      }
+
+      /* Brand: allow shrink, prevent overflow */
+      .brand {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .title {
+        font-size: 1.15rem;
+        letter-spacing: .12em;
+      }
+
+      /* Allow mini labels to wrap on very narrow screens */
+      .mini {
+        white-space: normal;
+      }
+
+      /* Topbar: stack left/right groups on very small screens */
+      .topbar {
+        padding: 8px 10px;
+        border-radius: 18px;
+      }
+
+      .left,
+      .right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      /* All buttons: ensure 44px min tap target */
+      .btn,
+      .btnPrimary {
+        min-height: 44px;
+      }
+
+      .miniBtn {
+        min-height: 36px;
+        padding: 6px 12px;
+      }
+
+      /* Track title: uncap width */
+      .trackTitle {
+        max-width: 100%;
+        font-size: .92rem;
+      }
+
+      /* Reduce iframe on mobile */
+      iframe {
+        height: 175px;
+      }
+
+      /* Arrows: wider tap target */
+      .ar {
+        width: 40px;
+        height: 80px;
+      }
+
+      /* Quick-action strip: left-align, full-width buttons */
+      .quickActs {
+        justify-content: stretch;
+        gap: 8px;
+        padding: 10px 6px 6px;
+      }
+
+      .quickActs .btn {
+        flex: 1;
+        min-height: 44px;
+        text-align: center;
+      }
+
+      /* Crate/history list: shorter on mobile to avoid over-scroll */
+      .list {
+        max-height: 220px;
+      }
+
+      /* Row wrapping in drawer */
+      .row {
+        gap: 8px;
+      }
+
+      /* Reduce card padding */
+      .card {
+        padding: 10px 8px;
+      }
+    }
+
     .ar {
       position: absolute;
       top: 58%;
