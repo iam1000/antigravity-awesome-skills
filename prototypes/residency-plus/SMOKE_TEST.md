@@ -64,3 +64,19 @@ curl.exe -i "http://localhost:8888/.netlify/functions/sc-official-resolve?url=ht
 ```
 
 > **Security check:** confirm no `access_token`, `Authorization`, `client_id`, or `client_secret` appears in any response body or server log output.
+
+---
+
+## Telemetry Debugging (2026-03-10)
+
+The wrapper functions use a lightweight, structured telemetry logger (`sc-auth-lib.js` -> `logTelemetry()`). 
+
+**Where to see telemetry:**
+1. In local development: in the terminal running `netlify dev` (as `Request from ::1: GET /.netlify/functions...` followed by `{"_telemetry":true,...}`).
+2. In production: inside the Netlify UI under **Site → Logs → Functions**.
+
+**What to check for:**
+- **Successes:** search for `"event":"sc_search_success"` or `"event":"sc_resolve_success"` showing `status_code: 200` and `duration_ms`.
+- **Blocked Origins:** search for `"event":"origin_forbidden"` showing `status_code: 403` and the rejected origin.
+- **Rate Limit Hits:** search for `"event":"rate_limit_block"` (internal limit, 429) or `"event":"upstream_429"` (SoundCloud limits).
+- **Security:** Ensure raw user queries DO NOT appear in the JSON (you should only see `query_length`). Raw URLs in resolve requests should only be logged if they were structurally valid/safe (`https://soundcloud.com/...`), though currently the code does not log the raw URL at all for privacy.

@@ -13,19 +13,19 @@
 
 // ── Env validation ────────────────────────────────────────────────────────────
 
-const _clientId     = process.env.SOUNDCLOUD_CLIENT_ID;
+const _clientId = process.env.SOUNDCLOUD_CLIENT_ID;
 const _clientSecret = process.env.SOUNDCLOUD_CLIENT_SECRET;
 
 function _credsMissing() {
-  const badId  = !_clientId     || _clientId.trim()     === "" || _clientId     === "YOUR_CLIENT_ID";
+  const badId = !_clientId || _clientId.trim() === "" || _clientId === "YOUR_CLIENT_ID";
   const badSec = !_clientSecret || _clientSecret.trim() === "" || _clientSecret === "YOUR_CLIENT_SECRET";
   return { badId, badSec, any: badId || badSec };
 }
 
 // ── In-memory token cache ─────────────────────────────────────────────────────
 
-let _cachedToken  = null;
-let _tokenExpiry  = 0;     // Unix ms
+let _cachedToken = null;
+let _tokenExpiry = 0;     // Unix ms
 
 /**
  * Returns a valid Bearer access token, fetching a new one when the cached
@@ -46,17 +46,17 @@ export async function getAccessToken() {
   }
 
   const body = new URLSearchParams({
-    grant_type:    "client_credentials",
-    client_id:     _clientId,
+    grant_type: "client_credentials",
+    client_id: _clientId,
     client_secret: _clientSecret,
   });
 
   let res;
   try {
     res = await fetch("https://api.soundcloud.com/oauth2/token", {
-      method:  "POST",
+      method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
-      body:    body.toString(),
+      body: body.toString(),
     });
   } catch {
     throw new Error("[sc-auth-lib] Token request failed — network error");
@@ -115,9 +115,9 @@ export function allowOrigin(origin) {
  * Simple rolling-window rate limiter.
  * 30 requests per 5-minute window per key (origin or IP).
  */
-const _WINDOW_MS    = 5 * 60 * 1000;   // 5 minutes
+const _WINDOW_MS = 5 * 60 * 1000;   // 5 minutes
 const _WINDOW_LIMIT = 30;
-const _rateBuckets  = new Map();        // key → number[]  (timestamps)
+const _rateBuckets = new Map();        // key → number[]  (timestamps)
 
 /**
  * @param {string} key  — typically origin or remote IP
@@ -149,10 +149,30 @@ export function checkRateLimit(key) {
 export function json(status, body, allowedOrigin = null) {
   const headers = { "content-type": "application/json" };
   if (allowedOrigin) {
-    headers["access-control-allow-origin"]  = allowedOrigin;
+    headers["access-control-allow-origin"] = allowedOrigin;
     headers["access-control-allow-headers"] = "content-type";
     headers["access-control-allow-methods"] = "GET,OPTIONS";
     headers["vary"] = "Origin";
   }
   return new Response(JSON.stringify(body), { status, headers });
+}
+
+// ── Telemetry (G2 Scaffold) ───────────────────────────────────────────────────
+
+/**
+ * Lightweight structured logger for official wrapper telemetry.
+ * Output is captured by Netlify Function Logs.
+ * 
+ * @param {string} eventName   - String event identifier (e.g. 'sc_search_request')
+ * @param {object} payload     - Contextual data (no secrets, no raw queries/urls)
+ */
+export function logTelemetry(eventName, payload = {}) {
+  const entry = {
+    _telemetry: true,
+    event: eventName,
+    timestamp: new Date().toISOString(),
+    ...payload
+  };
+  // Single-line JSON print for easy ingestion/parsing
+  console.log(JSON.stringify(entry));
 }

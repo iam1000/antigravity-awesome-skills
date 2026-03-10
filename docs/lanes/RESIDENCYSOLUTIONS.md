@@ -89,6 +89,7 @@ These use the **official SoundCloud OAuth2 client_credentials flow** (Bearer tok
 prototypes/residency-plus/
 ├── index.html              # Full RESIDENCY+ app
 ├── netlify.toml            # Build config
+├── TELEMETRY_SPEC.md       # Specs for wrapper endpoint analytics
 └── netlify/
     └── functions/
         ├── sc-auth-lib.js          # Shared OAuth / rate-limit / origin logic

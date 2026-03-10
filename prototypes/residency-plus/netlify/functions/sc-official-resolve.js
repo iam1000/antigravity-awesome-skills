@@ -12,7 +12,7 @@
  *   - Returns only safe-shaped fields; never proxies raw upstream
  */
 
-import { getAccessToken, allowOrigin, checkRateLimit, json } from "./sc-auth-lib.js";
+import { getAccessToken, allowOrigin, checkRateLimit, json, logTelemetry } from "./sc-auth-lib.js";
 
 const _SAFE_TRACK_FIELDS = ["id", "kind", "title", "permalink_url", "genre", "artwork_url"];
 const _SAFE_PLAYLIST_FIELDS = ["id", "kind", "title", "permalink_url", "genre", "artwork_url", "track_count"];
@@ -39,6 +39,8 @@ function shapeResource(raw) {
 }
 
 export default async function handler(req) {
+    const startMs = Date.now();
+
     // OPTIONS preflight
     if (req.method === "OPTIONS") {
         const origin = req.headers.get("origin");
@@ -55,18 +57,24 @@ export default async function handler(req) {
         });
     }
 
-    // Origin check
     const origin = req.headers.get("origin");
+    logTelemetry("sc_resolve_request", { endpoint: "sc-official-resolve", origin });
+
+    // Origin check
     const allowed = allowOrigin(origin);
     if (origin && !allowed) {
-        return json(403, { error: "Origin not permitted." });
+        const status_code = 403;
+        logTelemetry("origin_forbidden", { endpoint: "sc-official-resolve", origin, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "Origin not permitted." });
     }
 
     // Rate limit
     const rlKey = allowed || "no-origin";
     const rl = checkRateLimit(rlKey);
     if (!rl.ok) {
-        return json(429, { error: "Rate limit exceeded. Try again later.", retryAfter: rl.retryAfter }, allowed);
+        const status_code = 429;
+        logTelemetry("rate_limit_block", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "Rate limit exceeded. Try again later.", retryAfter: rl.retryAfter }, allowed);
     }
 
     // Params
@@ -74,10 +82,15 @@ export default async function handler(req) {
     const target = (reqUrl.searchParams.get("url") || "").trim();
 
     if (!target) {
-        return json(400, { error: "Missing required param: url" }, allowed);
+        const status_code = 400;
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "Missing required param: url" }, allowed);
     }
     if (!target.startsWith("https://soundcloud.com")) {
-        return json(400, { error: "param 'url' must begin with https://soundcloud.com" }, allowed);
+        const status_code = 400;
+        // Don't log the raw bad input to avoid ingestion garbage
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "param 'url' must begin with https://soundcloud.com" }, allowed);
     }
 
     // Fetch token
@@ -85,7 +98,9 @@ export default async function handler(req) {
     try {
         token = await getAccessToken();
     } catch (err) {
-        return json(400, { error: err.message }, allowed);
+        const status_code = 400;
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: err.message }, allowed);
     }
 
     // Call official API
@@ -101,22 +116,30 @@ export default async function handler(req) {
             },
         });
     } catch {
-        return json(502, { error: "Upstream request failed — network error." }, allowed);
+        const status_code = 502;
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "Upstream request failed — network error." }, allowed);
     }
 
     if (upstream.status === 429) {
+        logTelemetry("upstream_429", { endpoint: "sc-official-resolve", origin: allowed, status_code: 429, upstream_status: 429, duration_ms: Date.now() - startMs });
         return json(429, { error: "Upstream rate limit. Try again later." }, allowed);
     }
     if (!upstream.ok) {
-        return json(502, { error: `Upstream error (HTTP ${upstream.status}).` }, allowed);
+        const status_code = 502;
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, upstream_status: upstream.status, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: `Upstream error (HTTP ${upstream.status}).` }, allowed);
     }
 
     let data;
     try {
         data = await upstream.json();
     } catch {
-        return json(502, { error: "Upstream returned invalid JSON." }, allowed);
+        const status_code = 502;
+        logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, upstream_status: upstream.status, duration_ms: Date.now() - startMs });
+        return json(status_code, { error: "Upstream returned invalid JSON." }, allowed);
     }
 
+    logTelemetry("sc_resolve_success", { endpoint: "sc-official-resolve", origin: allowed, status_code: 200, upstream_status: 200, duration_ms: Date.now() - startMs });
     return json(200, shapeResource(data), allowed);
 }
