@@ -163,8 +163,9 @@ export function json(status, body, allowedOrigin = null) {
  * Lightweight structured logger for official wrapper telemetry.
  * Output is captured by Netlify Function Logs natively.
  * 
- * If TELEMETRY_INGEST_URL is configured, the sanitized JSON payload
- * is also forwarded to the external sink via a non-blocking HTTP POST.
+ * If Axiom variables are configured (AXIOM_API_TOKEN, AXIOM_DATASET, AXIOM_DOMAIN),
+ * the sanitized JSON payload is also forwarded to the Axiom dataset via a 
+ * non-blocking HTTP POST.
  * 
  * @param {string} eventName   - String event identifier (e.g. 'sc_search_request')
  * @param {object} payload     - Contextual data (no secrets, no raw queries/urls)
@@ -182,23 +183,27 @@ export function logTelemetry(eventName, payload = {}) {
   // 1. Always log locally for Netlify Runtime Logs
   console.log(jsonString);
 
-  // 2. Scaffold: External Sink Forwarding (if configured)
-  const ingestUrl = process.env.TELEMETRY_INGEST_URL;
-  const ingestToken = process.env.TELEMETRY_INGEST_TOKEN;
+  // 2. Axiom External Sink Forwarding (if configured)
+  const axiomToken = process.env.AXIOM_API_TOKEN;
+  const axiomDataset = process.env.AXIOM_DATASET;
+  const axiomDomain = process.env.AXIOM_DOMAIN;
 
-  if (ingestUrl) {
+  if (axiomToken && axiomDataset && axiomDomain) {
+    const ingestUrl = `https://${axiomDomain}/v1/datasets/${axiomDataset}/ingest`;
+
     // Fire-and-forget: we do not await this, so we don't block the client response.
     // Netlify functions normally allow background promises to finish shortly after return.
     fetch(ingestUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(ingestToken && { "Authorization": `Bearer ${ingestToken}` })
+        "Authorization": `Bearer ${axiomToken}`
       },
-      body: jsonString
+      // Axiom /v1/datasets/:id/ingest accepts an array of events
+      body: JSON.stringify([entry])
     }).catch(err => {
       // Swallow forwarding errors silently to protect core functionality
-      console.warn(`[TELEMETRY_WARN] Failed to forward telemetry to external sink: ${err.message}`);
+      console.warn(`[TELEMETRY_WARN] Failed to forward telemetry to Axiom: ${err.message}`);
     });
   }
 }

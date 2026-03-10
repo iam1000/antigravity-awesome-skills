@@ -40,21 +40,21 @@ This document evaluates practical options for persisting and analyzing that sani
 
 ---
 
-## Recommendation: External Aggregation Sink (Specifically **Axiom** or equivalent HTTP ingestion)
+## Implementation: External Aggregation Sink (**Axiom**)
 
-For ResidencySolutions G2, integrating a lightweight external log drain (like Axiom) via a simple, non-blocking HTTP fetch is the ideal next step.
+For ResidencySolutions G2, integrating a lightweight external log drain via Axiom's HTTP ingestion endpoint is implemented and active.
 
 **Why this fits now:**
-1. **Low Resource / No Vendor Lock-in:** We do not need heavy proprietary SDKs. We can use the native Node `fetch()` API asynchronously in the Netlify function to fire-and-forget the JSON payload.
-2. **Adheres to Specs:** The data shaping logic already exists in `sc-auth-lib.js`. We simply pipe the sanitized JSON out instead of (or in addition to) `console.log`. Privacy is structurally guaranteed by the `TELEMETRY_SPEC.md` contract.
+1. **Low Resource / No Vendor Lock-in:** We do not use heavy proprietary SDKs. We use the native Node `fetch()` API asynchronously in the Netlify function to fire-and-forget the JSON payload directly to Axiom's `v1/datasets/:id/ingest` endpoint.
+2. **Adheres to Specs:** The data shaping logic already exists in `sc-auth-lib.js`. We simply pipe the sanitized JSON out alongside `console.log`. Privacy is structurally guaranteed by the `TELEMETRY_SPEC.md` contract.
 3. **High Utility, Low Ops:** We get world-class querying and graphing without maintaining a database schema or connection pool in Serverless land.
 4. **Clean Fallback:** If the `fetch` fails or times out, we catch the error silently so the user's SoundCloud search is never interrupted by telemetry failures.
 
 ---
 
 ## Hard Rules for Implementation
-If/when configuring the ingestion pipeline in `sc-auth-lib.js`:
-- **No Heavy SDKs**: Use standard `fetch()` with `Promise.allSettled()` or `await` (if required by Netlify termination rules) wrapped in a `try/catch`. 
-- **Sanitization First**: Ensure the payload generated strictly aligns with the shape dictated by `TELEMETRY_SPEC.md`. 
-- **No Blocking**: Telemetry must never add critical-path latency or block a 200 OK response to the client.
-- **Token Management**: The API ingest key (e.g., `TELEMETRY_INGEST_KEY`) must be stored strictly within Netlify environment variables and never logged or exposed.
+The ingestion pipeline in `sc-auth-lib.js` enforces:
+- **No Heavy SDKs**: Uses standard `fetch()` wrapped in a `try/catch`. 
+- **Sanitization First**: The payload generated strictly aligns with the shape dictated by `TELEMETRY_SPEC.md`. 
+- **No Blocking**: Telemetry never adds critical-path latency or blocks a 200 OK response to the client.
+- **Token Management**: The API ingest keys (`AXIOM_API_TOKEN`) must be stored strictly within Netlify environment variables and never logged or exposed.

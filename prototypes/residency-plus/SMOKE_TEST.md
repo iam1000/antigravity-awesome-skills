@@ -72,8 +72,11 @@ curl.exe -i "http://localhost:8888/.netlify/functions/sc-official-resolve?url=ht
 The wrapper functions use a lightweight, structured telemetry logger (`sc-auth-lib.js` -> `logTelemetry()`). 
 
 **Where to see telemetry:**
-1. In local development: in the terminal running `netlify dev` (as `Request from ::1: GET /.netlify/functions...` followed by `{"_telemetry":true,...}`).
-2. In production: inside the Netlify UI under **Site → Logs → Functions**.
+1. **Local (Stdout):** in the terminal running `netlify dev` (as `Request from ::1: GET /.netlify/functions...` followed by `{"_telemetry":true,...}`).
+2. **Netlify (Stdout):** inside the Netlify UI under **Site → Logs → Functions** for ephemeral debugging.
+3. **Axiom (External Ingestion):** If `AXIOM_API_TOKEN`, `AXIOM_DATASET`, and `AXIOM_DOMAIN` are provided in `.env` (or Netlify vars), structured analytics will instantly forward to the Axiom dashboard (e.g. `https://app.axiom.co/datasets`).
+
+> **Note:** Axiom forwarding is non-blocking and optional. If variables are missing, rendering naturally skips forwarding without failing the client request. 
 
 **What to check for:**
 - **Successes:** search for `"event":"sc_search_success"` or `"event":"sc_resolve_success"` showing `status_code: 200` and `duration_ms`.

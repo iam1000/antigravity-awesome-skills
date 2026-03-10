@@ -17,7 +17,7 @@ ResidencySolutions has TWO subcomponents:
 - **Stack:** Static HTML + Netlify Functions (ES module format)
 - **What it does:** SoundCloud crate-digging tool with genre filters, shuffle, stations, auto-dig, saved crate, and history. Uses SoundCloud OAuth2 API via serverless proxy.
 - **Official wrapper endpoints deployed:** ✅ (2026-03-10)
-- **Telemetry State:** Sanitized JSON pipeline scaffolded. External sink forwarding (e.g., Axiom) is structurally ready pending deployment keys. 
+- **Telemetry State:** Sanitized JSON pipeline deployed. Logs natively to stdout and forwards asynchronously to **Axiom** if `AXIOM_*` variables are configured.
 - **Legacy endpoints:** REMOVED (quarantined 2026-03-10). Only `sc-official-search` and `sc-official-resolve` remain.
 
 ---
@@ -127,8 +127,9 @@ These endpoints use the **official SoundCloud OAuth2 client_credentials flow** (
 | `SOUNDCLOUD_CLIENT_ID` | OAuth client ID |
 | `SOUNDCLOUD_CLIENT_SECRET` | OAuth client secret (new — required by official flow) |
 | `ALLOWED_ORIGINS` | Comma-separated allowed origins, e.g. `http://localhost:8888,http://localhost:3000` |
-| `TELEMETRY_INGEST_URL` | (Optional) Destination URL for structured analytics sink |
-| `TELEMETRY_INGEST_TOKEN` | (Optional) Bearer token for the telemetry sink |
+| `AXIOM_API_TOKEN` | (Optional) Axiom API token for ingest |
+| `AXIOM_DATASET` | (Optional) Axiom dataset name |
+| `AXIOM_DOMAIN` | (Optional) e.g., `us-east-1.aws.edge.axiom.co` |
 
 - **Local dev:** set all three in `prototypes/residency-plus/.env` (gitignored)
 - **Deployed:** Netlify Dashboard → Site Settings → Environment Variables (mark `SOUNDCLOUD_CLIENT_SECRET` as **secret**)
