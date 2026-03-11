@@ -1,0 +1,12 @@
+[05:50:50] Starting Local Dev Verification...
+[05:50:50] Checking target: sc-health -> http://localhost:8888/.netlify/functions/sc-health
+[05:50:50] HTTP 200
+[05:50:50] Response: {"ok":true,"message":"SoundCloud client id detected."}
+[05:50:50] Checking target: sc-official-search -> http://localhost:8888/.netlify/functions/sc-official-search?q=ambient
+[05:50:50] HTTP 200
+[05:50:50] Response: {"collection":[{"id":10001,"title":"Ambient Fixture 1","permalink_url":"https://soundcloud.com/fixture/ambient-1","genre":"Ambient","artwork_url":"htt...
+[05:50:50] Checking target: sc-official-resolve -> http://localhost:8888/.netlify/functions/sc-official-resolve?url=https://soundcloud.com/fixture/ambient-1
+[05:50:51] HTTP 200
+[05:50:51] Response: {"kind":"unknown","id":10001,"title":"Ambient Fixture 1","permalink_url":"https://soundcloud.com/fixture/ambient-1","genre":"Ambient","artwork_url":"h...
+[05:50:51] 
+[05:50:51] RESULT: PASS
