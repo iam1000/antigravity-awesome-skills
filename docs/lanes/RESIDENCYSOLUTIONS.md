@@ -105,3 +105,16 @@ prototypes/residency-plus/
         ├── sc-official-search.js   # Target for search
         └── sc-official-resolve.js  # Target for resolve
 ```
+
+---
+
+## Roadmap / Upcoming Slices
+
+1. **Local Dev Wrapper Hardening** (CURRENT BLOCKER)
+   - Ensure local dev token throttling is fully resilient before starting any new product slices.
+2. **Discovery Engine Upgrade**
+   - High priority slice before Vibe Search begins.
+3. **Vibe Search**
+   - **DO NOT START UNTIL**:
+     1. Local wrapper reliability is definitively fixed and proven.
+     2. Discovery Engine Upgrade lands successfully.

@@ -33,11 +33,23 @@ const CACHE_FILE = path.join(os.tmpdir(), "sc-auth-cache.json");
 function readCache() {
   try {
     if (fs.existsSync(CACHE_FILE)) {
-      return JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+      const parsed = JSON.parse(fs.readFileSync(CACHE_FILE, "utf-8"));
+      // If we have a valid token in cache, use it
+      if (parsed && parsed.token) return parsed;
     }
   } catch (e) {
     // ignore
   }
+
+  // Fallback to bootstrap token if available
+  if (process.env.SOUNDCLOUD_BOOTSTRAP_ACCESS_TOKEN) {
+    return {
+      token: process.env.SOUNDCLOUD_BOOTSTRAP_ACCESS_TOKEN.trim(),
+      expiry: Date.now() + 3600 * 1000,
+      cooldownUntil: 0
+    };
+  }
+
   return { token: null, expiry: 0, cooldownUntil: 0 };
 }
 

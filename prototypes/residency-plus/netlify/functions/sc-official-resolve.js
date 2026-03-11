@@ -107,6 +107,22 @@ export default async function handler(req) {
     try {
         token = await getAccessToken();
     } catch (err) {
+        if (process.env.DEV_USE_PROD_WRAPPER_FALLBACK === "true") {
+            const prodBase = (process.env.DEV_PROD_WRAPPER_BASE || "https://residencysolutions.netlify.app").replace(/\/$/, "");
+            const fallbackUrl = `${prodBase}/.netlify/functions/sc-official-resolve?url=${encodeURIComponent(target)}`;
+            try {
+                // Spoof origin to match production's strict legacy allowlist
+                const fRes = await fetch(fallbackUrl, { headers: { "Origin": "http://localhost:8888" } });
+                const fData = await fRes.json().catch(() => ({}));
+                if (!fRes.ok) {
+                    return json(fRes.status, { error: `[Prod Fallback] ${fData.error || fRes.statusText}` }, allowed);
+                }
+                return json(200, fData, allowed);
+            } catch (fErr) {
+                logTelemetry("sc_resolve_fallback_error", { endpoint: "sc-official-resolve", error: fErr.message });
+            }
+        }
+
         const status_code = 400;
         logTelemetry("sc_resolve_error", { endpoint: "sc-official-resolve", origin: allowed, status_code, duration_ms: Date.now() - startMs });
         return json(status_code, { error: err.message }, allowed);

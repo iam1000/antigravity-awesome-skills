@@ -87,11 +87,27 @@ export default async function handler(req) {
         return json(status_code, { error: "Missing required param: q" }, allowed);
     }
 
-    // Fetch token (cached in memory — never logged)
+    // Fetch token
     let token;
     try {
         token = await getAccessToken();
     } catch (err) {
+        if (process.env.DEV_USE_PROD_WRAPPER_FALLBACK === "true") {
+            const prodBase = (process.env.DEV_PROD_WRAPPER_BASE || "https://residencysolutions.netlify.app").replace(/\/$/, "");
+            const fallbackUrl = `${prodBase}/.netlify/functions/sc-official-search?q=${encodeURIComponent(q)}&limit=${limit}`;
+            try {
+                // Spoof origin to match production's strict legacy allowlist
+                const fRes = await fetch(fallbackUrl, { headers: { "Origin": "http://localhost:8888" } });
+                const fData = await fRes.json().catch(() => ({}));
+                if (!fRes.ok) {
+                    return json(fRes.status, { error: `[Prod Fallback] ${fData.error || fRes.statusText}` }, allowed);
+                }
+                return json(200, fData, allowed);
+            } catch (fErr) {
+                logTelemetry("sc_search_fallback_error", { endpoint: "sc-official-search", error: fErr.message });
+            }
+        }
+
         const status_code = 400;
         logTelemetry("sc_search_error", { endpoint: "sc-official-search", origin: allowed, status_code, query_length, duration_ms: Date.now() - startMs });
         return json(status_code, { error: err.message }, allowed);
