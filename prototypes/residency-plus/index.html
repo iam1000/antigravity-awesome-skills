@@ -1318,7 +1318,86 @@
       b.textContent = msg;
     }
 
-    function setProgress(msg) { progressLine.textContent = msg || ""; }
+    function normalizeUrl(u) {
+      if (!u) return "";
+      let s = String(u).trim();
+      const q = s.indexOf("?");
+      if (q !== -1) s = s.slice(0, q);
+      while (s.endsWith("/")) s = s.slice(0, -1);
+      return s;
+    }
+    function parseBpmFromText(text) {
+      const t = (text || "").toLowerCase();
+      const m1 = t.match(/(?:^|[\s\[\(\-])(\d{2,3})\s*bpm\b/);
+      const m2 = t.match(/\bbpm\s*(\d{2,3})\b/);
+      const n = Number((m1?.[1] || m2?.[1] || 0));
+      if (!Number.isFinite(n) || n < 60 || n > 200) return "";
+      return String(Math.round(n));
+    }
+    function parseKeyFromText(text) {
+      const t = (text || "").toLowerCase().replace(/_/g, " ");
+      const sharpFlat = /([a-g])\s*([#b])\s*(major|minor)\b/;
+      const wordKey = /\b([a-g])\s*(major|minor)\b/;
+      const shortKey = /\b([a-g])\s*([#b])?\s*(m|maj|min)\b/;
+      let m = t.match(sharpFlat);
+      if (m) return `${m[1].toUpperCase()}${m[2]} ${m[3]}`;
+      m = t.match(wordKey);
+      if (m) return `${m[1].toUpperCase()} ${m[2]}`;
+      m = t.match(shortKey);
+      if (m) {
+        const note = m[1].toUpperCase() + (m[2] || "");
+        const qual = m[3];
+        if (qual === "m" || qual === "min") return `${note} minor`;
+        if (qual === "maj") return `${note} major`;
+      }
+      return "";
+    }
+    function isJunkText(text) {
+      const t = (text || "").toLowerCase();
+      const bad = ["free type beat", "type beat", "buy this beat", "lease this beat", "dm for placement", "sample pack", "loop kit"];
+      return bad.some(b => t.includes(b));
+    }
+    function scTagListToArray(tagList) {
+      if (!tagList) return [];
+      if (Array.isArray(tagList)) return tagList.map(x => String(x).toLowerCase());
+      return String(tagList).replace(/"/g, "").split(/[\s,]+/).map(t => t.trim().toLowerCase()).filter(Boolean).slice(0, 35);
+    }
+    function safeShortName(s, max = 18) {
+      const t = (s || "").toString().trim();
+      return t.length <= max ? t : t.slice(0, max - 1) + "…";
+    }
+    function classifyKindFromDuration(durationMs) {
+      return (Number(durationMs || 0) >= MIN_SET_MS) ? "set" : "track";
+    }
+    function isAllowedByMode(kind, durationMs, mode) {
+      const d = Number(durationMs || 0);
+      if (!d) return true;
+      if (mode === "track") return kind === "track" && d <= MAX_TRACK_MS;
+      if (mode === "set") return kind === "set" && d >= MIN_SET_MS;
+      return true;
+    }
+    function bucketPass(bucket, blob) {
+      const dBlock = ["dubstep", "brostep", "riddim dubstep", "140"];
+      const dhBlock = ["dancehall", "bashment", "jamaica", "riddim", "dubplate"];
+      const isDub = dBlock.some(w => blob.includes(w));
+      const isDh = dhBlock.some(w => blob.includes(w));
+      if (bucket === "dancehall") return isDh && !isDub;
+      if (bucket === "dubstep") return isDub;
+      return true;
+    }
+    function ensureWidget() {
+      if (scWidget) return scWidget;
+      try { scWidget = SC.Widget(playerFrame); return scWidget; } catch { return null; }
+    }
+    function buildEmbedUrl(url) {
+      return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url) + "&auto_play=false&color=%238b5cf6&visual=true&show_comments=false";
+    }
+    function widgetLoad(url, autoplay = true) {
+      const w = ensureWidget();
+      if (!w) { playerFrame.src = buildEmbedUrl(url); return; }
+      w.load(url, { auto_play: !!autoplay, visual: true, show_comments: false });
+    }
+    function widgetPause() { const w = ensureWidget(); try { w && w.pause(); } catch { } }
 
     // ===== Netlify functions =====
     let activeController = null;
