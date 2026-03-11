@@ -1,6 +1,6 @@
 {
   "generatedAt": "2026-02-08T00:00:00.000Z",
-  "total": 1242,
+  "total": 1246,
   "skills": [
     {
       "id": "00-andruia-consultant",
@@ -783,6 +783,31 @@
         "agent"
       ],
       "path": "skills/ai-engineer/SKILL.md"
+    },
+    {
+      "id": "ai-md",
+      "name": "ai-md",
+      "description": "Convert human-written CLAUDE.md into AI-native structured-label format. Battle-tested across 4 models. Same rules, fewer tokens, higher compliance.",
+      "category": "security",
+      "tags": [
+        "ai",
+        "md"
+      ],
+      "triggers": [
+        "ai",
+        "md",
+        "convert",
+        "human",
+        "written",
+        "claude",
+        "native",
+        "structured",
+        "label",
+        "format",
+        "battle",
+        "tested"
+      ],
+      "path": "skills/ai-md/SKILL.md"
     },
     {
       "id": "ai-ml",
@@ -12084,6 +12109,32 @@
       "path": "skills/executing-plans/SKILL.md"
     },
     {
+      "id": "explain-like-socrates",
+      "name": "explain-like-socrates",
+      "description": "Explains concepts using Socratic-style dialogue. Use when the user asks to explain, teach or help understand a concept like socrates.",
+      "category": "general",
+      "tags": [
+        "explain",
+        "like",
+        "socrates"
+      ],
+      "triggers": [
+        "explain",
+        "like",
+        "socrates",
+        "explains",
+        "concepts",
+        "socratic",
+        "style",
+        "dialogue",
+        "user",
+        "asks",
+        "teach",
+        "understand"
+      ],
+      "path": "skills/explain-like-socrates/SKILL.md"
+    },
+    {
       "id": "expo-api-routes",
       "name": "expo-api-routes",
       "description": "Guidelines for creating API routes in Expo Router with EAS Hosting",
@@ -17936,6 +17987,31 @@
         "sites"
       ],
       "path": "skills/local-legal-seo-audit/SKILL.md"
+    },
+    {
+      "id": "local-llm-expert",
+      "name": "local-llm-expert",
+      "description": "Master local LLM inference, model selection, VRAM optimization, and local deployment using Ollama, llama.cpp, vLLM, and LM Studio. Expert in quantization formats (GGUF, EXL2) and local AI privacy.",
+      "category": "security",
+      "tags": [
+        "local",
+        "llm"
+      ],
+      "triggers": [
+        "local",
+        "llm",
+        "inference",
+        "model",
+        "selection",
+        "vram",
+        "optimization",
+        "deployment",
+        "ollama",
+        "llama",
+        "cpp",
+        "vllm"
+      ],
+      "path": "skills/local-llm-expert/SKILL.md"
     },
     {
       "id": "logistics-exception-management",
@@ -30431,6 +30507,31 @@
         "de"
       ],
       "path": "skills/yann-lecun-tecnico/SKILL.md"
+    },
+    {
+      "id": "yes-md",
+      "name": "yes-md",
+      "description": "6-layer AI governance: safety gates, evidence-based debugging, anti-slack detection, and machine-enforced hooks. Makes AI safe, thorough, and honest.",
+      "category": "data-ai",
+      "tags": [
+        "yes",
+        "md"
+      ],
+      "triggers": [
+        "yes",
+        "md",
+        "layer",
+        "ai",
+        "governance",
+        "safety",
+        "gates",
+        "evidence",
+        "debugging",
+        "anti",
+        "slack",
+        "detection"
+      ],
+      "path": "skills/yes-md/SKILL.md"
     },
     {
       "id": "youtube-automation",

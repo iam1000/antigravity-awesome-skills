@@ -2,7 +2,7 @@
 
 Generated at: 2026-02-08T00:00:00.000Z
 
-Total skills: 1242
+Total skills: 1246
 
 ## architecture (80)
 
@@ -168,7 +168,7 @@ calculations | startup, business, analyst, market, opportunity | startup, busine
 | `warren-buffett` | Agente que simula Warren Buffett — o maior investidor do seculo XX e XXI, CEO da Berkshire Hathaway, discipulo de Benjamin Graham e socio intelectual de Char... | persona, investing, value-investing, business | persona, investing, value-investing, business, warren, buffett, agente, que, simula, maior, investidor, do |
 | `whatsapp-automation` | Automate WhatsApp Business tasks via Rube MCP (Composio): send messages, manage templates, upload media, and handle contacts. Always search tools first for c... | whatsapp | whatsapp, automation, automate, business, tasks, via, rube, mcp, composio, send, messages, upload |
 
-## data-ai (228)
+## data-ai (229)
 
 | Skill | Description | Tags | Triggers |
 | --- | --- | --- | --- |
@@ -409,6 +409,7 @@ Scope::with_data, save state, load state, serde,
 | `wellally-tech` | Integrate digital health data sources (Apple Health, Fitbit, Oura Ring) and connect to WellAlly.tech knowledge base. Import external health device data, stan... | wellally, tech | wellally, tech, integrate, digital, health, data, sources, apple, fitbit, oura, ring, connect |
 | `xlsx-official` | Comprehensive spreadsheet creation, editing, and analysis with support for formulas, formatting, data analysis, and visualization. When Claude needs to work ... | xlsx, official | xlsx, official, spreadsheet, creation, editing, analysis, formulas, formatting, data, visualization, claude, work |
 | `yann-lecun` | Agente que simula Yann LeCun — inventor das Convolutional Neural Networks, Chief AI Scientist da Meta, Prêmio Turing 2018. Use quando quiser: perspectivas so... | persona, cnn, meta, ai-safety-critic, open-source | persona, cnn, meta, ai-safety-critic, open-source, yann, lecun, agente, que, simula, inventor, das |
+| `yes-md` | 6-layer AI governance: safety gates, evidence-based debugging, anti-slack detection, and machine-enforced hooks. Makes AI safe, thorough, and honest. | yes, md | yes, md, layer, ai, governance, safety, gates, evidence, debugging, anti, slack, detection |
 | `youtube-automation` | Automate YouTube tasks via Rube MCP (Composio): upload videos, manage playlists, search content, get analytics, and handle comments. Always search tools firs... | youtube | youtube, automation, automate, tasks, via, rube, mcp, composio, upload, videos, playlists, search |
 
 ## development (179)
@@ -599,7 +600,7 @@ no matching field, parse error, widget... | makepad, reference | makepad, refere
 | `zod-validation-expert` | Expert in Zod — TypeScript-first schema validation. Covers parsing, custom errors, refinements, type inference, and integration with React Hook Form, Next.js... | zod, validation | zod, validation, typescript, first, schema, covers, parsing, custom, errors, refinements, type, inference |
 | `zustand-store-ts` | Create Zustand stores with TypeScript, subscribeWithSelector middleware, and proper state/action separation. Use when building React state management, creati... | zustand, store, ts | zustand, store, ts, stores, typescript, subscribewithselector, middleware, proper, state, action, separation, building |
 
-## general (294)
+## general (295)
 
 | Skill | Description | Tags | Triggers |
 | --- | --- | --- | --- |
@@ -694,6 +695,7 @@ no matching field, parse error, widget... | makepad, reference | makepad, refere
 evolve, evolution, contribute, contribution, self-improve, self-improvement,
 a... | evolution | evolution, critical, makepad, skills, self, contribution, triggers, evolve, contribute, improve, improvement, add |
 | `executing-plans` | Use when you have a written implementation plan to execute in a separate session with review checkpoints | executing, plans | executing, plans, written, plan, execute, separate, session, review, checkpoints |
+| `explain-like-socrates` | Explains concepts using Socratic-style dialogue. Use when the user asks to explain, teach or help understand a concept like socrates. | explain, like, socrates | explain, like, socrates, explains, concepts, socratic, style, dialogue, user, asks, teach, understand |
 | `expo-dev-client` | Build and distribute Expo development clients locally or via TestFlight | expo, dev, client | expo, dev, client, distribute, development, clients, locally, via, testflight |
 | `expo-ui-jetpack-compose` | expo-ui-jetpack-compose | expo, ui, jetpack, compose | expo, ui, jetpack, compose |
 | `expo-ui-swift-ui` | expo-ui-swift-ui | expo, ui, swift | expo, ui, swift |
@@ -1058,7 +1060,7 @@ distri... | makepad, deployment | makepad, deployment, critical, packaging, trig
 | `workflow-automation` | Workflow automation is the infrastructure that makes AI agents reliable. Without durable execution, a network hiccup during a 10-step payment flow means lost... |  | automation, infrastructure, makes, ai, agents, reliable, without, durable, execution, network, hiccup, during |
 | `x-twitter-scraper` | X (Twitter) data platform skill — tweet search, user lookup, follower extraction, engagement metrics, giveaway draws, monitoring, webhooks, 19 extraction too... | [twitter, x-api, scraping, mcp, social-media, data-extraction, giveaway, monitoring, webhooks] | [twitter, x-api, scraping, mcp, social-media, data-extraction, giveaway, monitoring, webhooks], twitter, scraper, data |
 
-## security (143)
+## security (145)
 
 | Skill | Description | Tags | Triggers |
 | --- | --- | --- | --- |
@@ -1067,6 +1069,7 @@ distri... | makepad, deployment | makepad, deployment, critical, packaging, trig
 | `active-directory-attacks` | This skill should be used when the user asks to "attack Active Directory", "exploit AD", "Kerberoasting", "DCSync", "pass-the-hash", "BloodHound enumeration"... | active, directory, attacks | active, directory, attacks, skill, should, used, user, asks, attack, exploit, ad, kerberoasting |
 | `agent-memory-systems` | Memory is the cornerstone of intelligent agents. Without it, every interaction starts from zero. This skill covers the architecture of agent memory: short-te... | agent, memory | agent, memory, cornerstone, intelligent, agents, without, every, interaction, starts, zero, skill, covers |
 | `agentic-actions-auditor` | Audits GitHub Actions workflows for security vulnerabilities in AI agent integrations including Claude Code Action, Gemini CLI, OpenAI Codex, and GitHub AI I... | agentic, actions, auditor | agentic, actions, auditor, audits, github, security, vulnerabilities, ai, agent, integrations, including, claude |
+| `ai-md` | Convert human-written CLAUDE.md into AI-native structured-label format. Battle-tested across 4 models. Same rules, fewer tokens, higher compliance. | ai, md | ai, md, convert, human, written, claude, native, structured, label, format, battle, tested |
 | `antigravity-workflows` | Orchestrate multiple Antigravity skills through guided workflows for SaaS MVP delivery, security audits, AI agent builds, and browser QA. | antigravity | antigravity, orchestrate, multiple, skills, through, guided, saas, mvp, delivery, security, audits, ai |
 | `api-endpoint-builder` | Builds production-ready REST API endpoints with validation, error handling, authentication, and documentation. Follows best practices for security and scalab... | api, endpoint, builder | api, endpoint, builder, rest, endpoints, validation, error, handling, authentication, documentation, follows, security |
 | `api-fuzzing-bug-bounty` | This skill should be used when the user asks to "test API security", "fuzz APIs", "find IDOR vulnerabilities", "test REST API", "test GraphQL", "API penetrat... | api, fuzzing, bug, bounty | api, fuzzing, bug, bounty, skill, should, used, user, asks, test, security, fuzz |
@@ -1136,6 +1139,7 @@ distri... | makepad, deployment | makepad, deployment, critical, packaging, trig
 | `lex` | Centralized 'Truth Engine' for cross-jurisdictional legal context (US, EU, CA) and contract scaffolding. | legal, context, cross-jurisdictional, compliance, scaffolding | legal, context, cross-jurisdictional, compliance, scaffolding, lex, centralized, truth, engine, cross, jurisdictional, us |
 | `lightning-architecture-review` | Review Bitcoin Lightning Network protocol designs, compare channel factory approaches, and analyze Layer 2 scaling tradeoffs. Covers trust models, on-chain f... | lightning, architecture | lightning, architecture, review, bitcoin, network, protocol, designs, compare, channel, factory, approaches, analyze |
 | `linkerd-patterns` | Implement Linkerd service mesh patterns for lightweight, security-focused service mesh deployments. Use when setting up Linkerd, configuring traffic policies... | linkerd | linkerd, mesh, lightweight, security, deployments, setting, up, configuring, traffic, policies, implementing, zero |
+| `local-llm-expert` | Master local LLM inference, model selection, VRAM optimization, and local deployment using Ollama, llama.cpp, vLLM, and LM Studio. Expert in quantization for... | local, llm | local, llm, inference, model, selection, vram, optimization, deployment, ollama, llama, cpp, vllm |
 | `loki-mode` | Multi-agent autonomous startup system for Claude Code. Triggers on "Loki Mode". Orchestrates 100+ specialized agents across engineering, QA, DevOps, security... | loki, mode | loki, mode, multi, agent, autonomous, startup, claude, code, triggers, orchestrates, 100, specialized |
 | `m365-agents-dotnet` | Microsoft 365 Agents SDK for .NET. Build multichannel agents for Teams/M365/Copilot Studio with ASP.NET Core hosting, AgentApplication routing, and MSAL-base... | m365, agents, dotnet | m365, agents, dotnet, microsoft, 365, sdk, net, multichannel, teams, copilot, studio, asp |
 | `m365-agents-py` | Microsoft 365 Agents SDK for Python. Build multichannel agents for Teams/M365/Copilot Studio with aiohttp hosting, AgentApplication routing, streaming respon... | m365, agents, py | m365, agents, py, microsoft, 365, sdk, python, multichannel, teams, copilot, studio, aiohttp |
