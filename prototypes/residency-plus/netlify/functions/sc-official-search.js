@@ -92,7 +92,7 @@ exports.handler = async function (event, context) {
         const msg = err && err.message ? String(err.message) : "";
         // If the token endpoint is rate-limited and we have no cached token, treat this
         // as a soft degradation instead of a hard 400 so the app can stay usable.
-        if (msg.includes("Token request failed — HTTP 429")) {
+        if (msg && msg.includes("[sc-auth-lib] Token request failed") && msg.includes("429")) {
             const status_code = 200;
             logTelemetry("sc_search_degraded", {
                 endpoint: "sc-official-search",
