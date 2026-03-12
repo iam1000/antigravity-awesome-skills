@@ -1526,7 +1526,7 @@
     function buildEmbedUrl(url, autoplay = false) {
       return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url) + "&auto_play=" + !!autoplay + "&color=%238b5cf6&visual=true&show_comments=false";
     }
-    function widgetLoad(url, autoplay = true) {
+    function widgetLoad(url, autoplay = false) {
       console.log("widgetLoad", url, autoplay);
       const w = ensureWidget();
       if (w) {
@@ -1556,12 +1556,26 @@
     // ===== Netlify functions =====
     let activeController = null;
     let lastReqAt = 0;
+    const SEARCH_COOLDOWN_MS = 2000;
+    const SEARCH_CACHE_TTL_MS = 60000;
+    const VIBE_CACHE_TTL_MS = 5 * 60 * 1000;
+    const searchCache = new Map();
+    const vibeCache = new Map();
+    let searchPipelineInFlight = false;
 
     async function scSearch(q, kind = "tracks", limit = 80, isPool = false) {
-      if (!isPool) {
-        if (Date.now() - lastReqAt < 600) return { collection: [] };
-        lastReqAt = Date.now();
+      const cacheKey = JSON.stringify({ q, kind, limit });
+      const now = Date.now();
+
+      const cached = searchCache.get(cacheKey);
+      if (cached && now - cached.ts < SEARCH_CACHE_TTL_MS) {
+        return cached.data;
       }
+
+      if (now - lastReqAt < SEARCH_COOLDOWN_MS) {
+        return { collection: [] };
+      }
+      lastReqAt = now;
 
       const controller = isPool ? new AbortController() : (activeController || new AbortController());
       if (!isPool) {
@@ -1582,6 +1596,7 @@
             empty: count === 0
           });
         }
+        searchCache.set(cacheKey, { ts: Date.now(), data: parsed });
         return parsed;
       } catch (err) {
         if (err.name === "AbortError") return { collection: [] };
@@ -1615,6 +1630,7 @@
     // anti-skip / anti-double-shuffle
     let shuffleInFlight = false;
     let pendingShuffle = false;
+    let lastShuffleAt = 0;
 
     // ===== Vibe Search state =====
     let lastVibePalette = null;
@@ -1704,30 +1720,37 @@
 
       for (const mood of palette.moods) {
         for (const inst of palette.instruments) {
+          if (queries.size >= 3) break;
           queries.add(`${mood} ${inst}`);
         }
+        if (queries.size >= 3) break;
       }
 
       for (const texture of palette.textures) {
         for (const inst of palette.instruments) {
+          if (queries.size >= 3) break;
           queries.add(`${texture} ${inst}`);
+        }
+        if (queries.size >= 3) break;
+      }
+
+      if (queries.size < 3 && base.length) {
+        if (palette.vocalPreference === "instrumental") {
+          queries.add(`${base.join(" ")} instrumental`);
+        } else if (palette.vocalPreference === "vocals") {
+          queries.add(`${base.join(" ")} vocals`);
         }
       }
 
-      if (palette.vocalPreference === "instrumental") {
-        queries.add(`${base.join(" ")} instrumental`);
-      } else if (palette.vocalPreference === "vocals") {
-        queries.add(`${base.join(" ")} vocals`);
-      }
-
-      return Array.from(queries).filter(Boolean).slice(0, 4);
+      return Array.from(queries).filter(Boolean).slice(0, 3);
     }
 
     async function fetchVibeCandidates(queries) {
       const all = [];
       for (const q of queries) {
+        if (all.length >= 120) break;
         try {
-          const res = await scSearch(q, "tracks", 40, true);
+          const res = await scSearch(q, "tracks", 30, true);
           if (Array.isArray(res?.collection)) {
             for (const it of res.collection) {
               all.push(it);
@@ -1797,6 +1820,7 @@
       if (!vibeInput) return;
       const prompt = vibeInput.value.trim();
       if (!prompt) return;
+      if (searchPipelineInFlight) return;
       const parsed = parseVibePrompt(prompt);
       const palette = normalizePalette(parsed);
       lastVibePalette = palette;
@@ -1806,9 +1830,21 @@
         return;
       }
       try {
+        const now = Date.now();
+        const cacheKey = palette.raw;
+        const cached = cacheKey && vibeCache.get(cacheKey);
+        let candidates;
+        if (cached && now - cached.ts < VIBE_CACHE_TTL_MS) {
+          candidates = cached.items;
+        } else {
+          searchPipelineInFlight = true;
+          candidates = await fetchVibeCandidates(queries);
+          if (cacheKey) {
+            vibeCache.set(cacheKey, { ts: Date.now(), items: candidates });
+          }
+        }
         clearStatus();
         setStatus("SEARCHING BY VIBE…");
-        const candidates = await fetchVibeCandidates(queries);
         const ranked = rerankVibeResults(candidates, palette);
         if (!ranked.length) {
           showError("No matches for this vibe yet. Try different words or use Shuffle.");
@@ -1856,6 +1892,8 @@
       } catch (e) {
         showError(String(e?.message || e));
         setStatus("READY");
+      } finally {
+        searchPipelineInFlight = false;
       }
     }
 
@@ -2375,7 +2413,7 @@
 
       currentItem = item;
       clearStatus();
-      setStatus("PLAYING");
+      setStatus(autoplay ? "PLAYING" : "ARMED");
 
       const titleText = item.title || "—";
       trackTitleEl.textContent = titleText;
@@ -2423,11 +2461,10 @@
         const rb = blobFor(resolved);
         const bucket = item.bucket || "other";
         if (!bucketPass(bucket, rb)) {
-          // blacklist this URL in current context and immediately shuffle again (no annoying “loading”)
+          // blacklist this URL in current context but avoid immediately chaining more network requests
           savePlayedUrl(item.url);
           widgetPause();
-          await sleep(120);
-          doShuffle(true);
+          setStatus("SKIPPED (bucket)");
           return;
         }
 
@@ -2454,8 +2491,7 @@
         if (!isAllowedByMode(kind, durationMs, mode)) {
           savePlayedUrl(item.url);
           widgetPause();
-          await sleep(120);
-          doShuffle(true);
+          setStatus("SKIPPED (length)");
           return;
         }
 
@@ -2543,7 +2579,7 @@
       const unplayed = getUnplayedOrReset(matches);
       const pool = contextPickPool(unplayed);
       const pick = pool[Math.floor(Math.random() * pool.length)];
-      loadItem(pick, true);
+      loadItem(pick, false);
       if (!firstShuffleLogged) {
         firstShuffleLogged = true;
         sendClientEvent("activation_first_shuffle", {});
@@ -2551,6 +2587,12 @@
     }
 
     async function doShuffle(fromResolveSkip = false) {
+      const now = Date.now();
+      if (!fromResolveSkip && now - lastShuffleAt < 1800) {
+        showOk("Taking a short breather before the next shuffle.");
+        setTimeout(() => { okBox.style.display = "none"; }, 1500);
+        return;
+      }
       if (shuffleInFlight) {
         pendingShuffle = true;
         return;
@@ -2594,6 +2636,7 @@
         showError(String(e?.message || e));
         setStatus("READY");
       } finally {
+        lastShuffleAt = Date.now();
         shuffleInFlight = false;
         shuffleBtn.disabled = false;
         shuffleBtn.textContent = "Shuffle";
