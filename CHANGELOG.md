@@ -8,6 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+
+## Documentation
+
+- Refreshed `README.md` release copy, star milestone badge, and TOC heading alignment so the top-level docs match the current `7.6.0` repository state.
+- Aligned the evergreen English docs with the current `7.6.0` / `1,250+ skills` repository state and removed emoji from active H2 headers to keep anchors stable under the maintenance rules.
+
+## [7.6.0] - 2026-03-12 - "Maintenance Sweep"
+
+> **Merged community PRs, documented Windows truncation recovery, and hardened Metasploit setup guidance**
+
+This release finishes a focused maintenance sweep across open pull requests and issues. It merges four community updates, ships the Jetski/Gemini overflow and path-safety documentation from the context overflow fix, adds a Windows recovery guide for truncation crash loops, and removes the non-deterministic Metasploit installer flow from the security skill.
+
+## New Skills
+
+- **acceptance-orchestrator** — acceptance-driven execution orchestration (PR #277)
+- **closed-loop-delivery** — delivery workflow with feedback loops (PR #277)
+- **create-issue-gate** — issue creation quality gate (PR #277)
+- **interview-coach** — interview preparation and coaching (PR #272)
+
+## Improvements
+
+- **PR maintenance**: Merged PRs #277, #272, #275, #278, and #271 using GitHub squash merge so all contributors receive merge credit.
+- **Jetski/Gemini loader docs**: Documented `overflowBehavior` handling and `skillsRoot`-confined path validation in the reference loader and integration guide (PR #271).
+- **Windows recovery docs**: Added `docs/users/windows-truncation-recovery.md` and linked it from the main user docs for truncation/context crash loops on Windows.
+- **Metasploit safety**: Replaced the remote installer pattern in `skills/metasploit-framework/SKILL.md` with an explicit "Metasploit must already be installed" prerequisite, and marked the skill as `risk: offensive` with the required warning.
+- **Repo sync**: Refreshed README metadata, generated registry files, and contributor acknowledgements before release.
+
+## Credits
+
+- **[@qcwssss](https://github.com/qcwssss)** for `acceptance-orchestrator`, `closed-loop-delivery`, and `create-issue-gate` (PR #277)
+- **[@dbhat93](https://github.com/dbhat93)** for `interview-coach` (PR #272)
+- **[@rafsilva85](https://github.com/rafsilva85)** for the credit source addition (PR #275)
+- **[@iftikharg786](https://github.com/iftikharg786)** for the star-history update branch that was refreshed and merged as PR #278
+- **[@DiggaX](https://github.com/DiggaX)** for the Windows recovery workflow shared in issue #274
+- **[@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)** for the Jetski/Gemini overflow loader changes in PR #271
+
 ## [7.5.0] - 2026-03-11 - "Socratic Governance"
 
 > **Introducing Truth Engines, Local Inference optimizations, and Advanced Output Formatting**
