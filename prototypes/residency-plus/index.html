@@ -1433,13 +1433,16 @@
         if (!d.ok) {
           window.SC_OK = false;
           showBanner(d.message);
-          return false;
+          // In local/fixture or degraded modes we still want the shell to boot
+          // and render a current track title, even if playback is limited.
+          return true;
         }
         return true;
       } catch {
         window.SC_OK = false;
         showBanner("Backend unavailable");
-        return false;
+        // Keep shell usable even if health check fails hard.
+        return true;
       }
     }
 
