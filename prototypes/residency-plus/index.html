@@ -967,6 +967,10 @@
             </select>
           </div>
           <button id="makeStationBtn" class="btn" disabled>Station</button>
+          <div class="field" style="min-width:220px; max-width:260px;">
+            <input id="vibeInput" placeholder="Search by vibe (e.g. warm hazy synths)" />
+          </div>
+          <button id="vibeBtn" class="btn" title="Vibe Search">Vibe</button>
           <!-- Auth: small account entry point, hidden/disabled when AUTH_ENABLED=false -->
           <button id="accountBtn" class="btn" style="opacity:.6;" disabled>Account</button>
           <button id="openDrawerBtn" class="btn dots" title="More">⋯</button>
@@ -1260,6 +1264,8 @@
     const drawerHint = document.getElementById("drawerHint");
 
     const themeBtn = document.getElementById("themeBtn");
+    const vibeInput = document.getElementById("vibeInput");
+    const vibeBtn = document.getElementById("vibeBtn");
 
     // ===== misc helpers =====
     const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -1609,6 +1615,249 @@
     // anti-skip / anti-double-shuffle
     let shuffleInFlight = false;
     let pendingShuffle = false;
+
+    // ===== Vibe Search state =====
+    let lastVibePalette = null;
+
+    // ===== Vibe Search helpers =====
+    function parseVibePrompt(prompt) {
+      const raw = (prompt || "").toLowerCase().trim();
+      if (!raw) return null;
+      const tokens = raw.split(/[\s,]+/).filter(Boolean);
+
+      const moodWords = ["warm", "cold", "dark", "bright", "uplifting", "melancholic", "sad", "happy", "moody", "introspective", "dreamy", "aggressive", "playful", "romantic", "sinister"];
+      const energyWords = ["slow", "fast", "midtempo", "high", "low", "intense", "driving", "hypnotic", "chill", "energetic", "calm"];
+      const textureWords = ["hazy", "crunchy", "gritty", "clean", "lofi", "noisy", "polished", "dusty", "analog", "tape", "glossy", "raw"];
+      const instrumentWords = ["piano", "keys", "synth", "synths", "strings", "guitar", "guitars", "bass", "drums", "drum", "percussion", "vocal", "vocals", "choir", "pads", "pad", "horns", "brass", "sax", "flute"];
+      const vocalOffWords = ["no vocals", "instrumental only", "instrumental"];
+      const vocalOnWords = ["with vocals", "vocal", "vocals", "singer", "rap", "rapper", "mc"];
+      const excludeMarkers = ["no", "without", "skip", "avoid"];
+      const genreIgnorePhrases = ["any genre", "ignore genre", "genre agnostic", "all genres"];
+
+      const palette = {
+        raw,
+        moods: new Set(),
+        energies: new Set(),
+        textures: new Set(),
+        instruments: new Set(),
+        includeTerms: new Set(),
+        excludeTerms: new Set(),
+        vocalPreference: "either", // "vocals", "instrumental", "either"
+        genreIrrelevant: genreIgnorePhrases.some(p => raw.includes(p))
+      };
+
+      // phrase-level vocal prefs
+      if (vocalOffWords.some(p => raw.includes(p))) {
+        palette.vocalPreference = "instrumental";
+      } else if (vocalOnWords.some(p => raw.includes(p))) {
+        palette.vocalPreference = "vocals";
+      }
+
+      let pendingExclude = false;
+      for (const t of tokens) {
+        if (excludeMarkers.includes(t)) {
+          pendingExclude = true;
+          continue;
+        }
+        const word = t.replace(/[^a-z0-9#]+/g, "");
+        if (!word) continue;
+
+        if (moodWords.includes(word)) palette.moods.add(word);
+        if (energyWords.includes(word)) palette.energies.add(word);
+        if (textureWords.includes(word)) palette.textures.add(word);
+        if (instrumentWords.includes(word)) palette.instruments.add(word);
+
+        if (pendingExclude) {
+          palette.excludeTerms.add(word);
+          pendingExclude = false;
+        } else {
+          palette.includeTerms.add(word);
+        }
+      }
+
+      return palette;
+    }
+
+    function normalizePalette(parsed) {
+      if (!parsed) return null;
+      return {
+        raw: parsed.raw,
+        moods: Array.from(parsed.moods),
+        energies: Array.from(parsed.energies),
+        textures: Array.from(parsed.textures),
+        instruments: Array.from(parsed.instruments),
+        includeTerms: Array.from(parsed.includeTerms),
+        excludeTerms: Array.from(parsed.excludeTerms),
+        vocalPreference: parsed.vocalPreference,
+        genreIrrelevant: !!parsed.genreIrrelevant
+      };
+    }
+
+    function expandVibeQueries(palette) {
+      if (!palette) return [];
+      const base = palette.includeTerms.length ? palette.includeTerms.slice(0, 5) : palette.moods.concat(palette.textures).slice(0, 5);
+      const queries = new Set();
+
+      if (base.length) {
+        queries.add(base.join(" "));
+      }
+
+      for (const mood of palette.moods) {
+        for (const inst of palette.instruments) {
+          queries.add(`${mood} ${inst}`);
+        }
+      }
+
+      for (const texture of palette.textures) {
+        for (const inst of palette.instruments) {
+          queries.add(`${texture} ${inst}`);
+        }
+      }
+
+      if (palette.vocalPreference === "instrumental") {
+        queries.add(`${base.join(" ")} instrumental`);
+      } else if (palette.vocalPreference === "vocals") {
+        queries.add(`${base.join(" ")} vocals`);
+      }
+
+      return Array.from(queries).filter(Boolean).slice(0, 4);
+    }
+
+    async function fetchVibeCandidates(queries) {
+      const all = [];
+      for (const q of queries) {
+        try {
+          const res = await scSearch(q, "tracks", 40, true);
+          if (Array.isArray(res?.collection)) {
+            for (const it of res.collection) {
+              all.push(it);
+            }
+          }
+        } catch {
+        }
+      }
+      // de-dup by url/id
+      const seen = new Set();
+      const uniq = [];
+      for (const it of all) {
+        const key = it.permalink_url || it.id || JSON.stringify([it.title, it.user?.username]);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        uniq.push(it);
+      }
+      return uniq;
+    }
+
+    function scoreVibeCandidate(it, palette) {
+      if (!palette || !it) return 0;
+      const title = (it.title || "").toLowerCase();
+      const artist = (it.user?.username || "").toLowerCase();
+      const tags = scTagListToArray(it.tag_list || "").map(t => t.toLowerCase());
+      const allText = `${title} ${artist} ${tags.join(" ")}`;
+
+      let score = 0;
+      for (const m of palette.moods) {
+        if (allText.includes(m)) score += 3;
+      }
+      for (const t of palette.textures) {
+        if (allText.includes(t)) score += 3;
+      }
+      for (const e of palette.energies) {
+        if (allText.includes(e)) score += 2;
+      }
+      for (const inst of palette.instruments) {
+        if (allText.includes(inst)) score += 2;
+      }
+      for (const term of palette.includeTerms) {
+        if (allText.includes(term)) score += 1;
+      }
+      for (const ex of palette.excludeTerms) {
+        if (allText.includes(ex)) score -= 4;
+      }
+
+      // light vocal preference heuristic
+      const hasVocalsTag = tags.some(t => /vocal|vocals|singer|rapper|mc/.test(t));
+      if (palette.vocalPreference === "instrumental" && hasVocalsTag) score -= 3;
+      if (palette.vocalPreference === "vocals" && hasVocalsTag) score += 2;
+
+      return score;
+    }
+
+    function rerankVibeResults(candidates, palette) {
+      if (!Array.isArray(candidates) || !candidates.length || !palette) return [];
+      const scored = candidates.map(it => ({
+        item: it,
+        _vibeScore: scoreVibeCandidate(it, palette)
+      }));
+      scored.sort((a, b) => (b._vibeScore || 0) - (a._vibeScore || 0));
+      return scored.map(x => x.item);
+    }
+
+    async function runVibeSearch() {
+      if (!vibeInput) return;
+      const prompt = vibeInput.value.trim();
+      if (!prompt) return;
+      const parsed = parseVibePrompt(prompt);
+      const palette = normalizePalette(parsed);
+      lastVibePalette = palette;
+      const queries = expandVibeQueries(palette);
+      if (!queries.length) {
+        showError("Describe the vibe a bit more (mood, texture, instruments).");
+        return;
+      }
+      try {
+        clearStatus();
+        setStatus("SEARCHING BY VIBE…");
+        const candidates = await fetchVibeCandidates(queries);
+        const ranked = rerankVibeResults(candidates, palette);
+        if (!ranked.length) {
+          showError("No matches for this vibe yet. Try different words or use Shuffle.");
+          setStatus("READY");
+          return;
+        }
+        // Adapt candidates into library-style items on the fly
+        const mapped = ranked.slice(0, 120).map(sc => ({
+          kind: "track",
+          title: sc.title || "",
+          artist: sc.user?.username || "",
+          url: sc.permalink_url || "",
+          bucket: genreSelect.value || "other",
+          tags: scTagListToArray(sc.tag_list || ""),
+          durationMs: (sc.full_duration ?? sc.duration ?? 0),
+          uploadedAt: sc.created_at || "",
+          bpmGuess: "",
+          keyGuess: "",
+          plays: sc.playback_count ?? null,
+          likes: sc.likes_count ?? sc.favoritings_count ?? null,
+          comments: sc.comment_count ?? null
+        }));
+        if (!mapped.length) {
+          showError("No matches for this vibe yet. Try different words or use Shuffle.");
+          setStatus("READY");
+          return;
+        }
+        library = mapped;
+        playedMap = {};
+        playedSet = new Set();
+        renderList(crateList, crate, "crate");
+        renderList(historyList, history, "history");
+        resetContext();
+        pickAndPlay(library);
+        setStatus("PLAYING");
+        if (shouldSample()) {
+          sendClientEvent("discovery_vibe_search", {
+            raw: palette.raw,
+            moods: palette.moods,
+            energies: palette.energies,
+            textures: palette.textures,
+            instruments: palette.instruments
+          });
+        }
+      } catch (e) {
+        showError(String(e?.message || e));
+        setStatus("READY");
+      }
+    }
 
     // ===== Stats (fixed) =====
     function applyStatsPills(item) {
@@ -2496,6 +2745,19 @@
     autoDigBtn.onclick = debouncedAutoDig;
 
     exportBtn.onclick = downloadExport;
+
+    if (vibeBtn && vibeInput) {
+      vibeBtn.onclick = () => {
+        if (window.SC_OK === false) return;
+        runVibeSearch();
+      };
+      vibeInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (window.SC_OK === false) return;
+          runVibeSearch();
+        }
+      });
+    }
 
     genreSelect.onchange = () => {
       try { localStorage.setItem(STORAGE_KEY_GENRE, genreSelect.value); } catch { }
