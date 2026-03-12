@@ -1075,6 +1075,7 @@
               <span class="panelCount" id="crateCount"></span>
             </div>
             <div style="display:flex;gap:4px;align-items:center;">
+          <button class="miniBtn" id="crateVibeBtn" title="Search for more tracks like your saved crate">Vibe from crate</button>
               <button class="miniBtn" id="copyCrateBtn" disabled title="Copy track URLs to clipboard">Copy URLs</button>
               <button class="miniBtn" id="exportCrateBtn" disabled title="Download crate as JSON">Export</button>
               <button class="miniBtn" id="clearCrate">clear</button>
@@ -1281,6 +1282,7 @@
     const pillComms = document.getElementById("pillComms");
 
     const crateList = document.getElementById("crateList");
+    const crateVibeBtn = document.getElementById("crateVibeBtn");
     const historyList = document.getElementById("historyList");
     const clearCrate = document.getElementById("clearCrate");
     const clearHistory = document.getElementById("clearHistory");
@@ -1973,6 +1975,114 @@
       }));
       scored.sort((a, b) => (b._vibeScore || 0) - (a._vibeScore || 0));
       return scored.map(x => x.item);
+    }
+
+    function derivePlaylistVibePaletteFromCrate() {
+      if (!Array.isArray(crate) || crate.length === 0) return null;
+      const sample = crate.slice(0, 40);
+      const moods = new Set();
+      const textures = new Set();
+      const instruments = new Set();
+      const includeTerms = new Set();
+      const excludeTerms = new Set();
+      let rawBits = [];
+
+      for (const tr of sample) {
+        const title = (tr.title || "").toLowerCase();
+        const artist = (tr.artist || "").toLowerCase();
+        const bucket = (tr.bucket || "").toLowerCase();
+        const tags = Array.isArray(tr.tags) ? tr.tags : [];
+        rawBits.push(title, artist, bucket, tags.join(" "));
+
+        for (const t of tags) {
+          const tt = String(t).toLowerCase();
+          if (!tt) continue;
+          if (["dub", "version", "edit", "demo", "live", "remix"].some(k => tt.includes(k))) textures.add(tt);
+          if (["ambient", "dream", "dreamy", "uplifting", "melancholic", "chill", "aggressive"].some(k => tt.includes(k))) moods.add(tt);
+          if (["piano", "keys", "synth", "guitar", "bass", "drums", "percussion", "vocal", "vocals"].some(k => tt.includes(k))) instruments.add(tt);
+        }
+
+        const genre = (tr._discovery_pool || tr.bucket || "").toLowerCase();
+        if (genre) includeTerms.add(genre);
+      }
+
+      const raw = rawBits.join(" ").trim().slice(0, 260);
+      return {
+        raw,
+        moods,
+        energies: new Set(),
+        textures,
+        instruments,
+        includeTerms,
+        excludeTerms,
+        vocalPreference: null,
+        genreIrrelevant: false
+      };
+    }
+
+    async function runPlaylistVibeSearchFromCrate() {
+      const derived = derivePlaylistVibePaletteFromCrate();
+      if (!derived) return;
+      const palette = normalizePalette(derived);
+      const queries = expandVibeQueries(palette);
+      if (!queries.length) return;
+      try {
+        if (shouldSample && typeof shouldSample === "function") {
+          if (shouldSample()) {
+            sendClientEvent("playlist_vibe_seeded", { size: crate.length, raw: palette.raw });
+          }
+        }
+      } catch { }
+      try {
+        const candidates = await fetchVibeCandidates(queries);
+        const ranked = rerankVibeResults(candidates, palette);
+        if (!ranked.length) {
+          showError("No matches for this playlist vibe yet. Try adjusting your crate or use Shuffle.");
+          setStatus("READY");
+          return;
+        }
+        const mapped = ranked.slice(0, 120).map(sc => ({
+          kind: "track",
+          title: sc.title || "",
+          artist: sc.user?.username || "",
+          url: sc.permalink_url || "",
+          bucket: genreSelect.value || "other",
+          tags: scTagListToArray(sc.tag_list || ""),
+          durationMs: (sc.full_duration ?? sc.duration ?? 0),
+          uploadedAt: sc.created_at || "",
+          bpmGuess: "",
+          keyGuess: "",
+          plays: sc.playback_count ?? null,
+          likes: sc.likes_count ?? sc.favoritings_count ?? null,
+          comments: sc.comment_count ?? null
+        }));
+        if (!mapped.length) {
+          showError("No matches for this playlist vibe yet. Try adjusting your crate or use Shuffle.");
+          setStatus("READY");
+          return;
+        }
+        library = mapped;
+        playedMap = {};
+        playedSet = new Set();
+        renderList(crateList, crate, "crate");
+        renderList(historyList, history, "history");
+        resetContext();
+        pickAndPlay(library);
+        setStatus("PLAYING");
+        try {
+          if (shouldSample && typeof shouldSample === "function") {
+            if (shouldSample()) {
+              sendClientEvent("playlist_vibe_search_started", {
+                size: crate.length,
+                raw: palette.raw
+              });
+            }
+          }
+        } catch { }
+      } catch (e) {
+        showError(String(e?.message || e));
+        setStatus("READY");
+      }
     }
 
     async function runVibeSearch() {
@@ -2947,6 +3057,16 @@
       setTimeout(() => { okBox.style.display = "none"; }, 1800);
     };
     clearCrate.onclick = () => { crate = []; saveJsonLS(STORAGE_KEY_CRATE, crate); renderList(crateList, crate, "crate"); };
+    if (crateVibeBtn) {
+      crateVibeBtn.onclick = () => {
+        if (!crate || crate.length === 0) {
+          showError("Add a few tracks to the saved crate before running a playlist vibe search.");
+          return;
+        }
+        if (window.SC_OK === false) return;
+        runPlaylistVibeSearchFromCrate();
+      };
+    }
     clearHistory.onclick = () => { history = []; saveJsonLS(STORAGE_KEY_HISTORY, history); renderList(historyList, history, "history"); };
     copyCrateBtn.onclick = () => copyCrateUrls();
     exportCrateBtn.onclick = () => exportCrate();
