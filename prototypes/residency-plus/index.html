@@ -1172,6 +1172,7 @@
     let debouncedCrateSync = null;
     let debouncedHistorySync = null;
     let debouncedStateSync = null;
+    let debouncedVibeSync = null;
 
     const DB_NAME = "residencyDB_v16";
     const DB_STORE = "kv";
@@ -1821,13 +1822,25 @@
       savedVibes.unshift({
         raw,
         label,
-        ts: Date.now()
+        ts: Date.now(),
+        palette
       });
       if (savedVibes.length > 10) savedVibes = savedVibes.slice(0, 10);
       try {
         saveJsonLS(STORAGE_KEY_VIBES, savedVibes);
       } catch { }
       renderVibePresets();
+      if (typeof debouncedVibeSync === "function") debouncedVibeSync();
+      try {
+        if (shouldSample && typeof shouldSample === "function") {
+          if (shouldSample()) {
+            sendClientEvent("vibe_preset_saved", {
+              raw,
+              label
+            });
+          }
+        }
+      } catch { }
     }
 
     function expandVibeQueries(palette) {
@@ -3448,9 +3461,29 @@
         await callAuthedFunction("sync-playlists", "POST", { playlists });
       }
 
+      async function syncVibesToCloud() {
+        if (!AUTH_ENABLED || !rplusSupabase || !savedVibes || savedVibes.length === 0) return;
+        const vibesPayload = savedVibes.slice(0, 50).map(v => ({
+          kind: "recent",
+          label: v.label || "",
+          prompt: v.raw || "",
+          palette: v.palette || null,
+          updatedAt: v.ts ? new Date(v.ts).toISOString() : new Date().toISOString()
+        }));
+        if (!vibesPayload.length) return;
+        const resp = await callAuthedFunction("sync-vibes", "POST", { vibes: vibesPayload });
+        try {
+          if (resp && resp.synced != null) {
+            sendClientEvent("vibe_preset_synced", { synced: resp.synced });
+            sendClientEvent("vibe_recent_synced", { synced: resp.synced });
+          }
+        } catch { }
+      }
+
       debouncedCrateSync = debounce(syncCrateToCloud, 800);
       debouncedHistorySync = debounce(syncHistoryToCloud, 1200);
       debouncedStateSync = debounce(syncSessionStateToCloud, 800);
+      debouncedVibeSync = debounce(syncVibesToCloud, 1200);
 
       async function fetchCloudData(token) {
         // Crate
@@ -3539,6 +3572,58 @@
             playlists = cloudPlaylists.playlists;
           }
         } catch { }
+
+        // Vibes: hydrate presets/recent vibes
+        try {
+          const cloudVibes = await callAuthedFunction("sync-vibes", "GET");
+          if (cloudVibes && Array.isArray(cloudVibes.items)) {
+            const mergedByKey = new Map();
+
+            const addVibe = (kind, prompt, label, palette, ts) => {
+              const normKind = kind || "recent";
+              const normPrompt = (prompt || "").trim();
+              if (!normPrompt) return;
+              const key = `${normKind}|${normPrompt.toLowerCase()}`;
+              const existing = mergedByKey.get(key);
+              if (!existing || ts > existing.ts) {
+                mergedByKey.set(key, { kind: normKind, prompt: normPrompt, label: label || "", palette: palette || null, ts });
+              }
+            };
+
+            for (const v of savedVibes || []) {
+              addVibe("recent", v.raw, v.label, v.palette || null, v.ts || 0);
+            }
+
+            if (cloudVibes.hasData) {
+              for (const v of cloudVibes.items) {
+                const ts = v.updatedAt ? Date.parse(v.updatedAt) : 0;
+                addVibe(v.kind || "recent", v.prompt, v.label, v.palette || null, ts);
+              }
+            }
+
+            const mergedList = Array.from(mergedByKey.values())
+              .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+              .slice(0, 20);
+
+            savedVibes = mergedList.map(v => ({
+              raw: v.prompt,
+              label: v.label || vibeLabelForPalette(v.palette) || v.prompt,
+              ts: v.ts || Date.now(),
+              palette: v.palette || null
+            }));
+
+            saveJsonLS(STORAGE_KEY_VIBES, savedVibes);
+            renderVibePresets();
+
+            try {
+              sendClientEvent("vibe_hydration_success", { count: savedVibes.length });
+            } catch { }
+          }
+        } catch (e) {
+          try {
+            sendClientEvent("vibe_hydration_failure", { error: String(e?.message || e) });
+          } catch { }
+        }
       }
 
       async function migrateToCloud(token) {
@@ -3589,6 +3674,7 @@
             await syncHistoryToCloud();
             await syncSessionStateToCloud();
             await syncPlaylistsToCloud();
+            await syncVibesToCloud();
           }
         } else {
           if (accountBtn) accountBtn.textContent = "Sign In";
