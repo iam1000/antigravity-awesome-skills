@@ -113,20 +113,44 @@ def load_metadata(base_dir: str, repo: str = GITHUB_REPO) -> dict:
         if compact.isdigit():
             current_stars = int(compact)
 
+    existing_sync = re.search(
+        r"registry-sync:.*?skills=(\d+).*?stars=(\d+).*?updated_at=([0-9T:\-+]+)",
+        current_readme,
+    )
+    existing_version_match = re.search(r"registry-sync:.*?version=([^;]+)", current_readme)
+
     live_stars = fetch_star_count(repo)
     total_stars = live_stars if live_stars is not None else current_stars or 0
 
+    version = str(package.get("version", "0.0.0"))
+    total_skills = len(skills)
+
+    metadata_changed = True
+    if existing_sync and existing_version_match:
+        prev_skills = int(existing_sync.group(1))
+        prev_version = existing_version_match.group(1).strip()
+        if prev_skills == total_skills and prev_version == version:
+            metadata_changed = False
+
+    if metadata_changed:
+        updated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    elif existing_sync:
+        updated_at = existing_sync.group(3)
+        total_stars = int(existing_sync.group(2))
+    else:
+        updated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
     return {
         "repo": repo,
-        "version": str(package.get("version", "0.0.0")),
-        "total_skills": len(skills),
-        "total_skills_label": format_skill_count(len(skills)),
+        "version": version,
+        "total_skills": total_skills,
+        "total_skills_label": format_skill_count(total_skills),
         "stars": total_stars,
         "star_badge_count": format_star_badge_count(total_stars),
         "star_milestone": format_star_milestone(total_stars),
         "star_celebration": format_star_celebration(total_stars),
-        "updated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "used_live_star_count": live_stars is not None,
+        "updated_at": updated_at,
+        "used_live_star_count": live_stars is not None and metadata_changed,
     }
 
 
