@@ -971,7 +971,8 @@
             <input id="vibeInput" placeholder="Search by vibe (e.g. warm hazy synths)" />
           </div>
           <button id="vibeBtn" class="btn" title="Vibe Search">Vibe</button>
-          <select id="vibePresetSelect" class="miniSelect" style="display:none; max-width:180px; font-size:11px;" title="Recent vibes"></select>
+          <select id="vibePresetSelect" class="miniSelect" style="display:none; max-width:180px; font-size:11px;" title="Vibe presets"></select>
+          <button id="vibePresetManageBtn" class="btn" style="display:none; font-size:11px; padding:4px 6px;" title="Rename, pin, or delete selected vibe preset">✎</button>
           <!-- Auth: small account entry point, hidden/disabled when AUTH_ENABLED=false -->
           <button id="accountBtn" class="btn" style="opacity:.6;" disabled>Account</button>
           <button id="openDrawerBtn" class="btn dots" title="More">⋯</button>
@@ -1729,6 +1730,7 @@
     let pendingShuffle = false;
     let lastShuffleAt = 0;
 
+    // Vibe presets (local-first + cloud-sync)
     let savedVibes = [];
     let playbackLimited = false;
     let lastPlaybackErrorAt = 0;
@@ -1825,22 +1827,49 @@
     function renderVibePresets() {
       if (!vibePresetSelect) return;
       while (vibePresetSelect.firstChild) vibePresetSelect.removeChild(vibePresetSelect.firstChild);
-      if (!savedVibes || !savedVibes.length) {
+
+      const normalized = (savedVibes || []).map(v => ({
+        raw: v.raw,
+        label: v.label || "",
+        palette: v.palette || null,
+        kind: v.kind || "saved",
+        pinned: !!v.pinned,
+        ts: v.updatedAt || v.ts || 0,
+        createdAt: v.createdAt || v.ts || 0
+      }));
+
+      if (!normalized.length) {
         vibePresetSelect.style.display = "none";
+        const manageBtn = document.getElementById("vibePresetManageBtn");
+        if (manageBtn) manageBtn.style.display = "none";
         return;
       }
+
+      const sortByTsDesc = (a, b) => (b.ts || 0) - (a.ts || 0);
+      const pinned = normalized.filter(v => v.pinned).sort(sortByTsDesc);
+      const saved = normalized.filter(v => !v.pinned && v.kind === "saved").sort(sortByTsDesc);
+      const recent = normalized.filter(v => v.kind === "recent").sort(sortByTsDesc);
+
       const placeholder = document.createElement("option");
       placeholder.value = "";
-      placeholder.textContent = "Recent vibes…";
+      placeholder.textContent = "Vibe presets (pinned, saved, recent)…";
       vibePresetSelect.appendChild(placeholder);
-      for (const v of savedVibes) {
+
+      function addOpt(v, prefix) {
         const opt = document.createElement("option");
         opt.value = v.raw;
-        opt.textContent = v.label;
+        opt.textContent = `${prefix}${v.label || v.raw || "Vibe"}`;
         vibePresetSelect.appendChild(opt);
       }
+
+      pinned.forEach(v => addOpt(v, "★ "));
+      saved.forEach(v => addOpt(v, ""));
+      recent.forEach(v => addOpt(v, "⟳ "));
+
       vibePresetSelect.style.display = "inline-block";
       vibePresetSelect.value = "";
+      const manageBtn = document.getElementById("vibePresetManageBtn");
+      if (manageBtn) manageBtn.style.display = "inline-block";
     }
 
     function saveVibePreset(palette) {
@@ -1859,12 +1888,21 @@
       const label = vibeLabelForPalette(palette);
       const raw = palette.raw;
       const existingIdx = savedVibes.findIndex(v => v.raw === raw);
-      if (existingIdx !== -1) savedVibes.splice(existingIdx, 1);
+      let existing = null;
+      if (existingIdx !== -1) {
+        existing = savedVibes[existingIdx];
+        savedVibes.splice(existingIdx, 1);
+      }
+      const nowTs = Date.now();
       savedVibes.unshift({
         raw,
         label,
-        ts: Date.now(),
-        palette
+        ts: nowTs,
+        palette,
+        kind: existing?.kind || "saved",
+        pinned: !!(existing && existing.pinned),
+        createdAt: existing?.createdAt || existing?.ts || nowTs,
+        updatedAt: nowTs
       });
       if (savedVibes.length > 10) savedVibes = savedVibes.slice(0, 10);
       try {
@@ -3122,6 +3160,99 @@
         if (window.SC_OK === false) return;
         runVibeSearch();
       };
+      const vibePresetManageBtn = document.getElementById("vibePresetManageBtn");
+      if (vibePresetManageBtn) {
+        vibePresetManageBtn.onclick = () => {
+          if (!savedVibes || !savedVibes.length) {
+            showOk("No vibe presets yet. Run a vibe search and save one first.");
+            setTimeout(() => { okBox.style.display = "none"; }, 2600);
+            return;
+          }
+          const selectedRaw = vibePresetSelect ? vibePresetSelect.value : "";
+          if (!selectedRaw) {
+            showOk("Select a vibe preset first to manage it.");
+            setTimeout(() => { okBox.style.display = "none"; }, 2200);
+            return;
+          }
+          const idx = savedVibes.findIndex(v => v.raw === selectedRaw);
+          if (idx === -1) return;
+          const preset = savedVibes[idx];
+          const actionInput = window.prompt("Type an action for this vibe preset: rename, pin, unpin, delete", "rename");
+          if (!actionInput) return;
+          const action = actionInput.toLowerCase().trim();
+
+          const touchPreset = () => {
+            const nowTs = Date.now();
+            preset.ts = nowTs;
+            preset.updatedAt = nowTs;
+          };
+
+          if (action === "rename") {
+            const newLabelInput = window.prompt("New name for this vibe:", preset.label || preset.raw || "");
+            if (!newLabelInput) return;
+            preset.label = newLabelInput.trim();
+            touchPreset();
+            try { saveJsonLS(STORAGE_KEY_VIBES, savedVibes); } catch { }
+            renderVibePresets();
+            if (typeof debouncedVibeSync === "function") debouncedVibeSync();
+            try {
+              sendClientEvent("vibe_preset_renamed", { prompt: preset.raw, label: preset.label });
+            } catch { }
+            return;
+          }
+
+          if (action === "pin") {
+            if (!preset.pinned) {
+              preset.pinned = true;
+              touchPreset();
+              try { saveJsonLS(STORAGE_KEY_VIBES, savedVibes); } catch { }
+              renderVibePresets();
+              if (typeof debouncedVibeSync === "function") debouncedVibeSync();
+              try {
+                sendClientEvent("vibe_preset_pinned", { prompt: preset.raw, label: preset.label, pinned: true });
+                if (shouldSample && typeof shouldSample === "function" && shouldSample()) {
+                  sendClientEvent("vibe_preset_reordered", { count: savedVibes.length });
+                }
+              } catch { }
+            }
+            return;
+          }
+
+          if (action === "unpin") {
+            if (preset.pinned) {
+              preset.pinned = false;
+              touchPreset();
+              try { saveJsonLS(STORAGE_KEY_VIBES, savedVibes); } catch { }
+              renderVibePresets();
+              if (typeof debouncedVibeSync === "function") debouncedVibeSync();
+              try {
+                sendClientEvent("vibe_preset_pinned", { prompt: preset.raw, label: preset.label, pinned: false });
+                if (shouldSample && typeof shouldSample === "function" && shouldSample()) {
+                  sendClientEvent("vibe_preset_reordered", { count: savedVibes.length });
+                }
+              } catch { }
+            }
+            return;
+          }
+
+          if (action === "delete") {
+            const ok = window.confirm("Delete this vibe preset? This won't affect your crate or history.");
+            if (!ok) return;
+            const removed = savedVibes.splice(idx, 1)[0];
+            try { saveJsonLS(STORAGE_KEY_VIBES, savedVibes); } catch { }
+            renderVibePresets();
+            if (vibePresetSelect) vibePresetSelect.value = "";
+            if (typeof debouncedVibeSync === "function") debouncedVibeSync();
+            try {
+              sendClientEvent("vibe_preset_deleted", { prompt: removed?.raw || selectedRaw, label: removed?.label || "" });
+              if (shouldSample && typeof shouldSample === "function" && shouldSample()) {
+                sendClientEvent("vibe_preset_reordered", { count: savedVibes.length });
+              }
+            } catch { }
+            return;
+          }
+        };
+      }
     }
 
     if (retryPlaybackBtn) {
@@ -3683,13 +3814,18 @@
 
       async function syncVibesToCloud() {
         if (!AUTH_ENABLED || !rplusSupabase || !savedVibes || savedVibes.length === 0) return;
-        const vibesPayload = savedVibes.slice(0, 50).map(v => ({
-          kind: "recent",
-          label: v.label || "",
-          prompt: v.raw || "",
-          palette: v.palette || null,
-          updatedAt: v.ts ? new Date(v.ts).toISOString() : new Date().toISOString()
-        }));
+        const nowIso = new Date().toISOString();
+        const vibesPayload = savedVibes.slice(0, 50).map(v => {
+          const ts = v.updatedAt || v.ts;
+          return {
+            kind: v.kind || "saved",
+            label: v.label || "",
+            prompt: v.raw || "",
+            palette: v.palette || null,
+            pinned: !!v.pinned,
+            updatedAt: ts ? new Date(ts).toISOString() : nowIso
+          };
+        });
         if (!vibesPayload.length) return;
         const resp = await callAuthedFunction("sync-vibes", "POST", { vibes: vibesPayload });
         try {
@@ -3799,25 +3935,35 @@
           if (cloudVibes && Array.isArray(cloudVibes.items)) {
             const mergedByKey = new Map();
 
-            const addVibe = (kind, prompt, label, palette, ts) => {
-              const normKind = kind || "recent";
+            const addVibe = (kind, prompt, label, palette, ts, pinned, createdAtTs) => {
+              const normKind = kind || "saved";
               const normPrompt = (prompt || "").trim();
               if (!normPrompt) return;
               const key = `${normKind}|${normPrompt.toLowerCase()}`;
               const existing = mergedByKey.get(key);
               if (!existing || ts > existing.ts) {
-                mergedByKey.set(key, { kind: normKind, prompt: normPrompt, label: label || "", palette: palette || null, ts });
+                mergedByKey.set(key, {
+                  kind: normKind,
+                  prompt: normPrompt,
+                  label: label || "",
+                  palette: palette || null,
+                  ts,
+                  pinned: !!pinned,
+                  createdAt: createdAtTs || ts || 0
+                });
               }
             };
 
             for (const v of savedVibes || []) {
-              addVibe("recent", v.raw, v.label, v.palette || null, v.ts || 0);
+              const localTs = v.updatedAt || v.ts || 0;
+              addVibe(v.kind || "saved", v.raw, v.label, v.palette || null, localTs, v.pinned || false, v.createdAt || v.ts || 0);
             }
 
             if (cloudVibes.hasData) {
               for (const v of cloudVibes.items) {
                 const ts = v.updatedAt ? Date.parse(v.updatedAt) : 0;
-                addVibe(v.kind || "recent", v.prompt, v.label, v.palette || null, ts);
+                const createdAtTs = v.createdAt ? Date.parse(v.createdAt) : 0;
+                addVibe(v.kind || "recent", v.prompt, v.label, v.palette || null, ts, v.pinned || false, createdAtTs);
               }
             }
 
@@ -3825,12 +3971,21 @@
               .sort((a, b) => (b.ts || 0) - (a.ts || 0))
               .slice(0, 20);
 
-            savedVibes = mergedList.map(v => ({
-              raw: v.prompt,
-              label: v.label || vibeLabelForPalette(v.palette) || v.prompt,
-              ts: v.ts || Date.now(),
-              palette: v.palette || null
-            }));
+            savedVibes = mergedList.map(v => {
+              const baseLabel = v.label || vibeLabelForPalette(v.palette) || v.prompt;
+              const ts = v.ts || Date.now();
+              const createdAt = v.createdAt || ts;
+              return {
+                raw: v.prompt,
+                label: baseLabel,
+                ts,
+                palette: v.palette || null,
+                kind: v.kind || "saved",
+                pinned: !!v.pinned,
+                createdAt,
+                updatedAt: ts
+              };
+            });
 
             saveJsonLS(STORAGE_KEY_VIBES, savedVibes);
             renderVibePresets();
