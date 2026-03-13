@@ -306,7 +306,7 @@ export default function () {
 
 ```javascript
 import http from 'k6/http';
-import { check } from 'k6/data';
+import { check } from 'k6';
 import { SharedArray } from 'k6/data';
 
 // Option 1: Load once, shared across VUs
@@ -332,7 +332,8 @@ export default function () {
 
 ```javascript
 import http from 'k6/http';
-import { check } from 'k6/data';
+import { check } from 'k6';
+import { SharedArray } from 'k6/data';
 
 const products = new SharedArray('products', function () {
   return JSON.parse(open('./products.json'));
@@ -388,7 +389,7 @@ export const options = {
     my_custom_metric: ['avg<100'],
     
     // Abort on threshold failure
-    'http_req_duration{pethod:GET}': ['p(95)<300'],
+    'http_req_duration{method:GET}': ['p(95)<300'],
   },
 };
 ```
@@ -557,7 +558,8 @@ export default function () {
 
 ```javascript
 import http from 'k6/http';
-import { check } from 'k6/data';
+import { check } from 'k6';
+import { SharedArray } from 'k6/data';
 
 const users = new SharedArray('users', function () {
   return JSON.parse(open('./users.json'));
