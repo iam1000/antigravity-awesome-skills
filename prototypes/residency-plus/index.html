@@ -3835,6 +3835,7 @@
         accountBtn.style.display = "";
         accountBtn.disabled = false;
         accountBtn.style.opacity = "1";
+        accountBtn.textContent = "Sign In";
         try {
           sendClientEvent("auth_entry_visible", {});
         } catch { }
@@ -4381,16 +4382,31 @@
         } catch { }
       }
 
-      rplusSupabase.auth.onAuthStateChange(async (event, session) => {
-        const user = session?.user || null;
+      function applyAuthUIState(user) {
         currentUser = user;
-
         if (user) {
           if (accountBtn) accountBtn.textContent = "Account";
           if (authSignedOutState) authSignedOutState.style.display = "none";
           if (authSignedInState) authSignedInState.style.display = "block";
           if (authCurrentUser) authCurrentUser.textContent = user.email || "";
+        } else {
+          if (accountBtn) accountBtn.textContent = "Sign In";
+          if (authSignedOutState) authSignedOutState.style.display = "block";
+          if (authSignedInState) authSignedInState.style.display = "none";
+        }
+      }
 
+      rplusSupabase.auth.getSession().then(({ data: { session } }) => {
+        applyAuthUIState(session?.user || null);
+      }).catch(() => {
+        applyAuthUIState(null);
+      });
+
+      rplusSupabase.auth.onAuthStateChange(async (event, session) => {
+        const user = session?.user || null;
+        applyAuthUIState(user);
+
+        if (user) {
           if (event === "SIGNED_IN") {
             const hasLocalData =
               (crate && crate.length > 0) ||
@@ -4415,10 +4431,6 @@
             await syncPlaylistsToCloud();
             await syncVibesToCloud();
           }
-        } else {
-          if (accountBtn) accountBtn.textContent = "Sign In";
-          if (authSignedOutState) authSignedOutState.style.display = "block";
-          if (authSignedInState) authSignedInState.style.display = "none";
         }
       });
     });
