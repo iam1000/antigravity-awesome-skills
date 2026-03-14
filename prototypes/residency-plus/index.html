@@ -1117,11 +1117,29 @@
     </div>
     <div class="drawerBody" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
       <div id="authSignedOutState">
-        <input type="email" id="authEmail" placeholder="Email"
-          style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
-        <input type="password" id="authPassword" placeholder="Password"
-          style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
-        <button id="authSubmitBtn" class="btnPrimary" style="width:100%; justify-content:center;">Continue</button>
+        <div id="authSignInForm">
+          <input type="email" id="authEmail" placeholder="Email"
+            style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
+          <input type="password" id="authPassword" placeholder="Password"
+            style="width:100%; box-sizing:border-box; margin-bottom:4px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
+          <a href="#" id="authForgotPasswordLink" style="font-size:11px; opacity:0.8;">Forgot password?</a>
+          <button id="authSubmitBtn" class="btnPrimary" style="width:100%; justify-content:center; margin-top:8px;">Continue</button>
+        </div>
+        <div id="authForgotPasswordForm" style="display:none;">
+          <input type="email" id="authResetEmail" placeholder="Email"
+            style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
+          <button id="authSendResetBtn" class="btnPrimary" style="width:100%; justify-content:center; margin-bottom:6px;">Send reset link</button>
+          <a href="#" id="authBackToSignInLink" style="font-size:11px; opacity:0.8;">Back to sign in</a>
+        </div>
+        <div id="authRecoverySetPasswordForm" style="display:none;">
+          <input type="password" id="authNewPassword" placeholder="New password"
+            style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
+          <button id="authUpdatePasswordBtn" class="btnPrimary" style="width:100%; justify-content:center;">Update password</button>
+        </div>
+        <div id="authConfirmationSentBlock" style="display:none;">
+          <div style="font-size:13px; margin-bottom:8px;">Check your email to confirm your account.</div>
+          <a href="#" id="authResendConfirmLink" style="font-size:11px; opacity:0.8;">Resend confirmation email</a>
+        </div>
         <div style="font-size:11px; margin-top:8px; opacity:0.7; text-align:center;" id="authToggleHint">
           Don't have an account?
           <a href="#" id="authToggleMode" style="color:#a855f7;">Sign Up</a>
@@ -3913,6 +3931,17 @@
       const upgradeBtn = document.getElementById("upgradeBtn");
       const billingMsg = document.getElementById("billingMsg");
       const manageSubBtn = document.getElementById("manageSubBtn");
+      const authSignInForm = document.getElementById("authSignInForm");
+      const authForgotPasswordForm = document.getElementById("authForgotPasswordForm");
+      const authForgotPasswordLink = document.getElementById("authForgotPasswordLink");
+      const authBackToSignInLink = document.getElementById("authBackToSignInLink");
+      const authResetEmail = document.getElementById("authResetEmail");
+      const authSendResetBtn = document.getElementById("authSendResetBtn");
+      const authRecoverySetPasswordForm = document.getElementById("authRecoverySetPasswordForm");
+      const authNewPassword = document.getElementById("authNewPassword");
+      const authUpdatePasswordBtn = document.getElementById("authUpdatePasswordBtn");
+      const authConfirmationSentBlock = document.getElementById("authConfirmationSentBlock");
+      const authResendConfirmLink = document.getElementById("authResendConfirmLink");
 
       if (!AUTH_ENABLED) {
         const slot = document.getElementById("topbar-auth-slot");
@@ -4003,25 +4032,42 @@
       async function refreshPlanAndEntitlements() {
         try {
           const resp = await callAuthedFunction("get-entitlements", "GET");
-          if (!resp) return;
+          if (!resp) {
+            currentPlan = "free";
+            currentEntitlements = null;
+            applyPlanUI();
+            return;
+          }
           currentPlan = resp.plan || "free";
           currentEntitlements = resp.entitlements || null;
           applyPlanUI();
         } catch {
+          currentPlan = "free";
+          currentEntitlements = null;
+          applyPlanUI();
         }
       }
 
+      const PRODUCTION_ORIGIN = "https://www.residencysolutions.net";
+
       function resetAuthUI() {
-        if (!authEmail || !authPassword || !authError || !authToggleHint) return;
+        if (!authError || !authToggleHint) return;
         authError.style.display = "none";
         authError.style.color = "#ef4444";
-        authEmail.value = "";
-        authPassword.value = "";
+        if (authEmail) authEmail.value = "";
+        if (authPassword) authPassword.value = "";
+        if (authResetEmail) authResetEmail.value = "";
+        if (authNewPassword) authNewPassword.value = "";
         isSignUpMode = false;
         authTitle.textContent = "Sign In";
         authToggleHint.innerHTML = "Don't have an account? <a href='#' id='authToggleMode' style='color:#a855f7;'>Sign Up</a>";
         const t = document.getElementById("authToggleMode");
         if (t) t.onclick = toggleAuthMode;
+        if (authSignInForm) authSignInForm.style.display = "";
+        if (authForgotPasswordForm) authForgotPasswordForm.style.display = "none";
+        if (authRecoverySetPasswordForm) authRecoverySetPasswordForm.style.display = "none";
+        if (authConfirmationSentBlock) authConfirmationSentBlock.style.display = "none";
+        if (authToggleHint) authToggleHint.style.display = "";
       }
 
       function toggleAuthMode(e) {
@@ -4043,6 +4089,7 @@
       if (accountBtn && authModal) {
         accountBtn.onclick = () => {
           resetAuthUI();
+          checkRecoveryHash();
           if (currentUser) {
             refreshPlanAndEntitlements();
           }
@@ -4076,6 +4123,111 @@
           authModal.style.display = "none";
         };
       }
+
+      if (authForgotPasswordLink) authForgotPasswordLink.onclick = (e) => {
+        e.preventDefault();
+        authError.style.display = "none";
+        if (authSignInForm) authSignInForm.style.display = "none";
+        if (authForgotPasswordForm) authForgotPasswordForm.style.display = "";
+        if (authToggleHint) authToggleHint.style.display = "none";
+      };
+      if (authBackToSignInLink) authBackToSignInLink.onclick = (e) => {
+        e.preventDefault();
+        authError.style.display = "none";
+        if (authResetEmail) authResetEmail.value = "";
+        if (authSignInForm) authSignInForm.style.display = "";
+        if (authForgotPasswordForm) authForgotPasswordForm.style.display = "none";
+        if (authToggleHint) authToggleHint.style.display = "";
+      };
+      if (authSendResetBtn && authResetEmail) authSendResetBtn.onclick = async () => {
+        const email = authResetEmail.value.trim();
+        if (!email) {
+          authError.textContent = "Enter your email address.";
+          authError.style.display = "block";
+          return;
+        }
+        authSendResetBtn.disabled = true;
+        authSendResetBtn.textContent = "Sending…";
+        authError.style.display = "none";
+        try {
+          const { error } = await rplusSupabase.auth.resetPasswordForEmail(email, {
+            redirectTo: PRODUCTION_ORIGIN
+          });
+          if (error) throw error;
+          authError.style.color = "#22c55e";
+          authError.textContent = "Check your email for the reset link.";
+          authError.style.display = "block";
+        } catch (err) {
+          authError.style.color = "#ef4444";
+          authError.textContent = err.message || "Could not send reset email.";
+          authError.style.display = "block";
+        } finally {
+          authSendResetBtn.disabled = false;
+          authSendResetBtn.textContent = "Send reset link";
+        }
+      };
+      if (authResendConfirmLink) authResendConfirmLink.onclick = async (e) => {
+        e.preventDefault();
+        const email = authEmail?.value?.trim();
+        if (!email) return;
+        authError.style.display = "none";
+        try {
+          const { error } = await rplusSupabase.auth.resend({ type: "signup", email });
+          if (error) throw error;
+          authError.style.color = "#22c55e";
+          authError.textContent = "Confirmation email sent again. Check your inbox.";
+          authError.style.display = "block";
+        } catch (err) {
+          authError.style.color = "#ef4444";
+          authError.textContent = err.message || "Could not resend. Try again.";
+          authError.style.display = "block";
+        }
+      };
+      if (authUpdatePasswordBtn && authNewPassword) authUpdatePasswordBtn.onclick = async () => {
+        const newPassword = authNewPassword.value;
+        if (!newPassword || newPassword.length < 6) {
+          authError.textContent = "Password must be at least 6 characters.";
+          authError.style.display = "block";
+          return;
+        }
+        authUpdatePasswordBtn.disabled = true;
+        authError.style.display = "none";
+        try {
+          const { error } = await rplusSupabase.auth.updateUser({ password: newPassword });
+          if (error) throw error;
+          authNewPassword.value = "";
+          if (authRecoverySetPasswordForm) authRecoverySetPasswordForm.style.display = "none";
+          if (authSignInForm) authSignInForm.style.display = "";
+          if (authToggleHint) authToggleHint.style.display = "";
+          authError.style.color = "#22c55e";
+          authError.textContent = "Password updated. You can sign in with your new password.";
+          authError.style.display = "block";
+          if (window.history.replaceState) window.history.replaceState({}, "", window.location.pathname || "/");
+        } catch (err) {
+          authError.style.color = "#ef4444";
+          authError.textContent = err.message || "Update failed. Try again.";
+          authError.style.display = "block";
+        } finally {
+          authUpdatePasswordBtn.disabled = false;
+        }
+      };
+
+      function checkRecoveryHash() {
+        try {
+          const hash = window.location.hash || "";
+          const params = new URLSearchParams(hash.replace(/^#/, ""));
+          if (params.get("type") === "recovery" && authRecoverySetPasswordForm && authSignInForm) {
+            authSignInForm.style.display = "none";
+            authForgotPasswordForm.style.display = "none";
+            if (authToggleHint) authToggleHint.style.display = "none";
+            authRecoverySetPasswordForm.style.display = "";
+            authTitle.textContent = "Set new password";
+            authError.style.display = "none";
+          }
+        } catch { }
+      }
+      checkRecoveryHash();
+      window.addEventListener("hashchange", checkRecoveryHash);
 
       if (upgradeBtn) {
         upgradeBtn.onclick = async () => {
@@ -4159,9 +4311,10 @@
               if (error) throw error;
               try { sendClientEvent("auth_sign_up_success", {}); } catch { }
               sendClientEvent("auth_sign_up", {});
-              authError.style.color = "#22c55e";
-              authError.textContent = "Check your email to confirm, then sign in.";
-              authError.style.display = "block";
+              if (authSignInForm) authSignInForm.style.display = "none";
+              if (authToggleHint) authToggleHint.style.display = "none";
+              if (authConfirmationSentBlock) authConfirmationSentBlock.style.display = "";
+              authError.style.display = "none";
               isSignUpMode = false;
             } else {
               const { error } = await rplusSupabase.auth.signInWithPassword({ email, password });

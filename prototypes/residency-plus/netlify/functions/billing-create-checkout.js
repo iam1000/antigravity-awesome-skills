@@ -48,6 +48,7 @@ export default async function handler(req) {
     });
 
     const body = await req.json();
+    // Frontend sends success_url and cancel_url with ?checkout=success / ?checkout=cancel for analytics.
     const successUrl = body.success_url || process.env.BILLING_SUCCESS_URL;
     const cancelUrl = body.cancel_url || process.env.BILLING_CANCEL_URL;
 
