@@ -977,9 +977,9 @@
           <select id="sessionSelect" class="miniSelect" style="display:none; max-width:160px; font-size:11px;" title="Reopen a saved dig session"></select>
           <button id="openDrawerBtn" class="btn dots" title="More">⋯</button>
         </div>
-        <!-- Auth: outside .right so no innerHTML/child mutations inside .right can remove or affect it -->
+        <!-- Auth: permanent static markup. Do not remove/replace #accountBtn or slot children in JS. -->
         <span id="topbar-auth-slot" style="display:inline-flex; flex-shrink:0; align-items:center; gap:10px;">
-          <button id="accountBtn" class="btn" style="opacity:.6;" disabled>Account</button>
+          <button id="accountBtn" class="btn" type="button">Sign In</button>
         </span>
       </div>
 
@@ -3817,7 +3817,7 @@
         return;
       }
 
-      // Auth slot is a direct child of .topbar (outside .right) so childList mutations inside .right cannot affect it
+      // Only toggle slot/accountBtn display, textContent, disabled. Never create/remove/replace #accountBtn or slot children.
       function ensureAuthButtonVisible() {
         const slot = document.getElementById("topbar-auth-slot");
         if (slot) {
