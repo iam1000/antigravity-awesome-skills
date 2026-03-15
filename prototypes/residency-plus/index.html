@@ -1572,7 +1572,7 @@
     }
 
     // ===== Client Telemetry (high-signal only) =====
-    const TELEMETRY_ENABLED = true;
+    const TELEMETRY_ENABLED = false; // temporarily off to reduce console noise while debugging checkout
     const TELEMETRY_SAMPLE_RATE = 0.2; // 20% sampling for per-search metrics
 
     function shouldSample() {
@@ -4351,58 +4351,79 @@
 
       if (upgradeBtn) {
         upgradeBtn.onclick = async () => {
-          console.log("[Residency+] Upgrade click start");
+          console.log("[Upgrade] click start");
           if (billingMsg) {
             billingMsg.textContent = "";
             billingMsg.style.display = "none";
           }
           upgradeBtn.disabled = true;
-          const originalText = upgradeBtn.textContent;
-          upgradeBtn.textContent = "Loading…";
+          upgradeBtn.textContent = "Loading...";
           try {
-            try { sendClientEvent("upgrade_click", {}); } catch { }
+            let session;
+            if (rplusSupabase && rplusSupabase.auth) {
+              session = await rplusSupabase.auth.getSession();
+            }
+            const token = session?.data?.session?.access_token;
+            if (!token) {
+              console.log("[Upgrade] no session");
+              if (billingMsg) {
+                billingMsg.textContent = "Please sign in again.";
+                billingMsg.style.display = "block";
+              }
+              return;
+            }
+            console.log("[Upgrade] got session");
             const baseUrl = window.location.origin + window.location.pathname;
             const successUrl = baseUrl + "?checkout=success";
             const cancelUrl = baseUrl + "?checkout=cancel";
-            console.log("[Residency+] Upgrade request payload", { success_url: successUrl, cancel_url: cancelUrl });
-            let resp;
+            const url = "/.netlify/functions/billing-create-checkout";
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            console.log("[Upgrade] sending fetch");
+            const response = await fetch(url, {
+              method: "POST",
+              headers: {
+                "authorization": `Bearer ${token}`,
+                "content-type": "application/json"
+              },
+              body: JSON.stringify({ success_url: successUrl, cancel_url: cancelUrl }),
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            console.log("[Upgrade] response status", response.status);
+            const raw = await response.text();
+            console.log("[Upgrade] response text", raw);
+            let data;
             try {
-              resp = await callBillingCheckout(successUrl, cancelUrl);
-            } catch (e) {
-              console.error("[Residency+] Upgrade catch (timeout or fetch error)", e);
-              throw e;
-            }
-            if (!resp || resp.billing_enabled === false) {
-              const errMsg = (resp && resp.error) ? resp.error : "Billing is currently unavailable.";
+              data = raw ? JSON.parse(raw) : null;
+            } catch (parseErr) {
               if (billingMsg) {
-                billingMsg.textContent = errMsg;
+                billingMsg.textContent = "Checkout returned an invalid response.";
                 billingMsg.style.display = "block";
               }
-              console.error("[Residency+] Upgrade: billing unavailable or no response", resp);
               return;
             }
-            if (resp.url) {
-              console.log("[Residency+] Upgrade redirect url", resp.url);
-              try { sendClientEvent("checkout_start", {}); } catch { }
-              window.location.href = resp.url;
+            if (response.ok && data && data.url) {
+              console.log("[Upgrade] redirecting", data.url);
+              window.location.href = data.url;
               return;
             }
-            if (billingMsg) {
-              billingMsg.textContent = "Unable to start checkout. Try again later.";
-              billingMsg.style.display = "block";
-            }
-            console.error("[Residency+] Upgrade: no checkout URL in response", resp);
-          } catch (e) {
-            const errMsg = e && e.message ? e.message : "Upgrade failed. Try again later.";
+            const errMsg = (data && data.error) ? data.error : (response.ok ? "Unable to start checkout." : `Request failed (${response.status})`);
             if (billingMsg) {
               billingMsg.textContent = errMsg;
               billingMsg.style.display = "block";
             }
-            console.error("[Residency+] Upgrade error", e);
+          } catch (e) {
+            console.log("[Upgrade] error", e);
+            const errMsg = e && e.name === "AbortError" ? "Checkout timed out. Please try again." : (e && e.message ? e.message : "Upgrade failed. Try again later.");
+            if (billingMsg) {
+              billingMsg.textContent = errMsg;
+              billingMsg.style.display = "block";
+            }
           } finally {
-            console.log("[Residency+] Upgrade finally: restore button");
+            console.log("[Upgrade] restore button");
             upgradeBtn.disabled = false;
-            upgradeBtn.textContent = originalText;
+            upgradeBtn.textContent = "Upgrade to RESIDENCY+";
           }
         };
       }
