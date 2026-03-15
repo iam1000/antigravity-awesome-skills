@@ -1030,7 +1030,16 @@
           </div>
           <button id="makeStationBtn" class="btn" disabled>Station</button>
           <div class="field" style="min-width:220px; max-width:260px;">
-            <input id="vibeInput" placeholder="Search by vibe (e.g. warm hazy synths)" />
+            <input
+              id="vibeInput"
+              name="vibe_query"
+              placeholder="Search by vibe (e.g. warm hazy synths)"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="none"
+              spellcheck="false"
+              inputmode="search"
+            />
           </div>
           <button id="vibeBtn" class="btn" title="Vibe Search">Vibe</button>
           <select id="vibePresetSelect" class="miniSelect" style="display:none; max-width:180px; font-size:11px;" title="Vibe presets"></select>
@@ -1181,21 +1190,21 @@
     <div class="drawerBody" style="padding:16px; display:flex; flex-direction:column; gap:12px;">
       <div id="authSignedOutState">
         <div id="authSignInForm">
-          <input type="email" id="authEmail" placeholder="Email"
+          <input type="email" id="authEmail" name="email" autocomplete="email" placeholder="Email"
             style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
-          <input type="password" id="authPassword" placeholder="Password"
+          <input type="password" id="authPassword" name="password" autocomplete="current-password" placeholder="Password"
             style="width:100%; box-sizing:border-box; margin-bottom:4px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
           <a href="#" id="authForgotPasswordLink" style="font-size:11px; opacity:0.8;">Forgot password?</a>
           <button id="authSubmitBtn" class="btnPrimary" style="width:100%; justify-content:center; margin-top:8px;">Continue</button>
         </div>
         <div id="authForgotPasswordForm" style="display:none;">
-          <input type="email" id="authResetEmail" placeholder="Email"
+          <input type="email" id="authResetEmail" name="reset_email" autocomplete="email" placeholder="Email"
             style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
           <button id="authSendResetBtn" class="btnPrimary" style="width:100%; justify-content:center; margin-bottom:6px;">Send reset link</button>
           <a href="#" id="authBackToSignInLink" style="font-size:11px; opacity:0.8;">Back to sign in</a>
         </div>
         <div id="authRecoverySetPasswordForm" style="display:none;">
-          <input type="password" id="authNewPassword" placeholder="New password"
+          <input type="password" id="authNewPassword" name="new_password" autocomplete="new-password" placeholder="New password"
             style="width:100%; box-sizing:border-box; margin-bottom:8px; padding:8px; border-radius:999px; border:1px solid rgba(170,230,255,.18); background:rgba(2,10,24,.28); color:#f8fbff;">
           <button id="authUpdatePasswordBtn" class="btnPrimary" style="width:100%; justify-content:center;">Update password</button>
         </div>
@@ -1453,6 +1462,17 @@
       if (!s) return "";
       if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s)) return "";
       return s.length > 200 ? s.slice(0, 200) : s;
+    }
+    if (vibeInput) {
+      const scrubVibeInput = () => {
+        const cleaned = sanitizeVibePrompt(vibeInput.value);
+        if (vibeInput.value !== cleaned) vibeInput.value = cleaned;
+      };
+      ["focus", "input", "change", "blur"].forEach(ev => {
+        vibeInput.addEventListener(ev, scrubVibeInput);
+      });
+      setTimeout(scrubVibeInput, 300);
+      setTimeout(scrubVibeInput, 1000);
     }
     function setPill(el, text) {
       if (!el) return;
@@ -4135,6 +4155,7 @@
       }
 
       let isSignUpMode = false;
+      setAuthInputsDisabled(true);
       savedVibes = loadJsonLS(STORAGE_KEY_VIBES, []) || [];
       if (Array.isArray(savedVibes) && savedVibes.length) {
         savedVibes = savedVibes.filter(v => sanitizeVibePrompt(v.raw || v.prompt || ""));
@@ -4233,6 +4254,15 @@
         if (t) t.onclick = toggleAuthMode;
       }
 
+      function setAuthInputsDisabled(disabled) {
+        const inputs = [authEmail, authPassword, authResetEmail, authNewPassword];
+        for (const el of inputs) {
+          if (!el) continue;
+          el.disabled = disabled;
+          el.tabIndex = disabled ? -1 : 0;
+        }
+      }
+
       if (accountBtn && authModal) {
         accountBtn.onclick = () => {
           resetAuthUI();
@@ -4249,6 +4279,7 @@
           } else {
             if (authTitle) authTitle.textContent = "Sign In";
           }
+          setAuthInputsDisabled(false);
           if (authModalBackdrop) authModalBackdrop.style.display = "flex";
           authModal.style.display = "block";
           try {
@@ -4261,6 +4292,7 @@
       function closeAuthModal() {
         if (authModalBackdrop) authModalBackdrop.style.display = "none";
         if (authModal) authModal.style.display = "none";
+        setAuthInputsDisabled(true);
       }
 
       if (authModalBackdrop) {
