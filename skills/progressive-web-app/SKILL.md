@@ -34,6 +34,7 @@ Every PWA implementation must include these files at minimum:
 - [ ] `manifest.json` — Full app metadata and icon set
 - [ ] `sw.js` — Service worker with install, activate, and fetch handlers
 - [ ] `app.js` — Main app logic with SW registration and install prompt handling
+- [ ] `offline.html` — Fallback page shown when navigation fails offline (required — missing file will cause install to fail)
 
 ---
 
@@ -139,24 +140,25 @@ if ('serviceWorker' in navigator) {
 
 // ─── Install Prompt (Add to Home Screen) ───────────────────────────────────
 let deferredPrompt;
-const installBtn = document.getElementById('install-btn');
+const installBtn = document.getElementById('install-btn'); // may be null if omitted
 
 // Capture the browser's install prompt — it fires before the browser's own UI
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault(); // Stop automatic mini-infobar on mobile
   deferredPrompt = e;
-  installBtn.hidden = false; // Show your custom install button
+  if (installBtn) installBtn.hidden = false; // Show your custom install button
 });
 
-installBtn.addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  console.log('[App] Install outcome:', outcome); // 'accepted' or 'dismissed'
-  deferredPrompt = null;
-  installBtn.hidden = true;
-});
-
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('[App] Install outcome:', outcome);
+    deferredPrompt = null;
+    installBtn.hidden = true;
+  });
+}
 // Fires when the app is installed (via browser or your button)
 window.addEventListener('appinstalled', () => {
   console.log('[App] PWA installed successfully');
