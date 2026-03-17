@@ -32,11 +32,11 @@ A **router** groups related **procedures** (think: endpoints). Procedures are ty
 
 ### Input Validation with Zod
 
-All procedure inputs are validated with Zod schemas. The validated, typed input is available in the procedure handler as `ctx.input` — no manual parsing.
+All procedure inputs are validated with Zod schemas. The validated, typed input is available in the procedure handler — no manual parsing.
 
 ### Context
 
-`context` is shared state passed to every procedure — auth session, database client, request headers, etc. It is built once per request in `createContext()`.
+`context` is shared state passed to every procedure — auth session, database client, request headers, etc. It is built once per request in a context factory. **Important:** Next.js App Router and Pages Router require separate context factories because App Router handlers receive a fetch `Request`, not a Node.js `NextApiRequest`.
 
 ### Middleware
 
@@ -78,20 +78,36 @@ export const publicProcedure = t.procedure;
 export const middleware = t.middleware;
 ```
 
-### Step 2: Define Context
+### Step 2: Define Two Context Factories
+
+Next.js App Router handlers receive a fetch `Request` (not a Node.js `NextApiRequest`), so the context
+must be built differently depending on the call site. Define one factory per surface:
 
 ```typescript
 // src/server/context.ts
-import { type CreateNextContextOptions } from '@trpc/server/adapters/next';
-import { getServerAuthSession } from './auth'; // your auth helper
+import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import { auth } from '@/server/auth'; // Next-Auth v5 / your auth helper
 import { db } from './db';
 
-export async function createContext({ req, res }: CreateNextContextOptions) {
-  const session = await getServerAuthSession({ req, res });
-  return { session, db, req, res };
+/**
+ * Context for the HTTP handler (App Router Route Handler).
+ * `opts.req` is the fetch Request — auth is resolved server-side via `auth()`.
+ */
+export async function createTRPCContext(opts: FetchCreateContextFnOptions) {
+  const session = await auth(); // server-side auth — no req/res needed
+  return { session, db, headers: opts.req.headers };
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>>;
+/**
+ * Context for direct server-side callers (Server Components, RSC, cron jobs).
+ * No HTTP request is involved, so we call auth() directly from the server.
+ */
+export async function createServerContext() {
+  const session = await auth();
+  return { session, db };
+}
+
+export type Context = Awaited<ReturnType<typeof createTRPCContext>>;
 ```
 
 ### Step 3: Build an Auth Middleware and Protected Procedure
@@ -192,18 +208,24 @@ export type AppRouter = typeof appRouter;
 
 ### Step 6: Mount the API Handler (Next.js App Router)
 
+The App Router handler must use `fetchRequestHandler` and the **fetch-based** context factory.
+`createTRPCContext` receives `FetchCreateContextFnOptions` (with a fetch `Request`), not
+a Pages Router `req/res` pair.
+
 ```typescript
 // src/app/api/trpc/[trpc]/route.ts
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import { appRouter } from '@/server/root';
-import { createContext } from '@/server/context';
+import { createTRPCContext } from '@/server/context';
 
 const handler = (req: Request) =>
   fetchRequestHandler({
     endpoint: '/api/trpc',
     req,
     router: appRouter,
-    createContext: () => createContext({ req } as any),
+    // opts is FetchCreateContextFnOptions — req is the fetch Request
+    createContext: (opts: FetchCreateContextFnOptions) => createTRPCContext(opts),
   });
 
 export { handler as GET, handler as POST };
@@ -275,7 +297,7 @@ export function PostList() {
 }
 ```
 
-### Example 2: Mutation with Optimistic UI
+### Example 2: Mutation with Cache Invalidation
 
 ```typescript
 'use client';
@@ -315,19 +337,22 @@ export function CreatePost() {
 }
 ```
 
-### Example 3: Server-Side Caller (SSR / Server Components)
+### Example 3: Server-Side Caller (Server Components / SSR)
+
+Use `createServerContext` — the dedicated server-side factory — so that `auth()` is called
+correctly without needing a synthetic or empty request object:
 
 ```typescript
 // app/posts/page.tsx (Next.js Server Component)
 import { appRouter } from '@/server/root';
 import { createCallerFactory } from '@trpc/server';
-import { createContext } from '@/server/context';
+import { createServerContext } from '@/server/context';
 
 const createCaller = createCallerFactory(appRouter);
 
 export default async function PostsPage() {
-  // Direct call — no HTTP overhead
-  const caller = createCaller(await createContext({} as any));
+  // Uses createServerContext — calls auth() server-side, no req/res cast needed
+  const caller = createCaller(await createServerContext());
   const { posts } = await caller.post.list({ limit: 20 });
 
   return (
@@ -365,15 +390,12 @@ export const notificationRouter = router({
 ```
 
 ```typescript
-// Client usage
-const { data: notification } = trpc.notification.onNew.useSubscription(
-  undefined,
-  {
-    onData(data) {
-      toast(data.message);
-    },
-  }
-);
+// Client usage — requires wsLink in the client config
+trpc.notification.onNew.useSubscription(undefined, {
+  onData(data) {
+    toast(data.message);
+  },
+});
 ```
 
 ---
@@ -381,14 +403,14 @@ const { data: notification } = trpc.notification.onNew.useSubscription(
 ## Best Practices
 
 - ✅ **Export only `AppRouter` type** from server code — never import `appRouter` on the client
+- ✅ **Use separate context factories** — `createTRPCContext` for the HTTP handler, `createServerContext` for Server Components and callers
 - ✅ **Validate all inputs with Zod** — never trust raw `input` without a schema
-- ✅ **Use `createCallerFactory`** for Server Component / SSR data fetching to avoid HTTP round-trips
 - ✅ **Split routers by domain** (posts, users, billing) and merge in `root.ts`
 - ✅ **Extend context in middleware** rather than querying the DB multiple times per request
 - ✅ **Use `utils.invalidate()`** after mutations to keep the cache fresh
-- ❌ **Don't use tRPC over `fetch` in Server Components** — use the server-side caller instead
+- ❌ **Don't cast context with `as any`** to silence type errors — the mismatch will surface as a runtime failure when auth or session lookups return undefined
+- ❌ **Don't use `createContext({} as any)`** in Server Components — use `createServerContext()` which calls `auth()` directly
 - ❌ **Don't put business logic in the route handler** — keep it in the procedure or a service layer
-- ❌ **Don't skip Zod input schemas** even for simple mutations — they enforce type safety at runtime
 - ❌ **Don't share the tRPC client instance globally** — create it per-provider to avoid stale closures
 
 ---
@@ -404,20 +426,23 @@ const { data: notification } = trpc.notification.onNew.useSubscription(
 
 ## Common Pitfalls
 
+- **Problem:** Auth session is `null` in protected procedures even when the user is logged in
+  **Solution:** Ensure `createTRPCContext` uses the correct server-side auth call (e.g. `auth()` from Next-Auth v5) and is not receiving a Pages Router `req/res` cast via `as any` in an App Router handler
+
+- **Problem:** Server Component caller fails for auth-dependent queries
+  **Solution:** Use `createServerContext()` (the dedicated server-side factory) instead of passing an empty or synthetic object to `createContext`
+
 - **Problem:** "Type error: AppRouter is not assignable to AnyRouter"
-  **Solution:** Ensure you import `AppRouter` as a `type` import (`import type { AppRouter }`) on the client, not the full module
+  **Solution:** Import `AppRouter` as a `type` import (`import type { AppRouter }`) on the client, not the full module
 
 - **Problem:** Mutations not reflecting in the UI after success
   **Solution:** Call `utils.<router>.<procedure>.invalidate()` in `onSuccess` to trigger a refetch via React Query
 
-- **Problem:** Server-side caller throws "No context" errors in App Router
-  **Solution:** Pass a properly constructed context to `createCaller()` — do not reuse request-bound contexts across different server function calls
-
 - **Problem:** "Cannot find module '@trpc/server/adapters/next'" with App Router
-  **Solution:** Use `@trpc/server/adapters/fetch` and the `fetchRequestHandler` for Next.js 13+ App Router; the `nextjs` adapter is for Pages Router only
+  **Solution:** Use `@trpc/server/adapters/fetch` and `fetchRequestHandler` for the App Router; the `nextjs` adapter is for Pages Router only
 
 - **Problem:** Subscriptions not connecting
-  **Solution:** Subscriptions require a WebSocket or SSE link. Add `splitLink` to route subscriptions to `wsLink` and queries/mutations to `httpBatchLink`
+  **Solution:** Subscriptions require `splitLink` — route subscriptions to `wsLink` and queries/mutations to `httpBatchLink`
 
 ---
 
