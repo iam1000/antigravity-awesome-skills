@@ -17,9 +17,25 @@ Generate high-converting landing pages from a product description. Output comple
 **Target:** LCP < 1s · CLS < 0.1 · FID < 100ms  
 **Output:** TSX components + Tailwind styles + SEO meta + copy variants
 
+## Core Capabilities
+
+- 5 hero section variants (centered, split, gradient, video-bg, minimal)
+- Feature sections (grid, alternating, cards with icons)
+- Pricing tables (2–4 tiers with feature lists and toggle)
+- FAQ accordion with schema markup
+- Testimonials (grid, carousel, single-quote)
+- CTA sections (banner, full-page, inline)
+- Footer (simple, mega, minimal)
+- 4 design styles with Tailwind class sets
+
 ---
 
-author: "halith-smh"ce** (recommended) — if the user has existing brand content (website copy, blog posts, marketing materials), run it through `marketing-skill/content-production/scripts/brand_voice_analyzer.py` to get a voice profile (formality, tone, perspective). Use the profile to inform design style and copy framework selection:
+## Generation Workflow
+
+Follow these steps in order for every landing page request:
+
+1. **Gather inputs** — collect product name, tagline, audience, pain point, key benefit, pricing tiers, design style, and copy framework using the trigger format below. Ask only for missing fields.
+2. **Analyze brand voice** (recommended) — if the user has existing brand content (website copy, blog posts, marketing materials), run it through `marketing-skill/content-production/scripts/brand_voice_analyzer.py` to get a voice profile (formality, tone, perspective). Use the profile to inform design style and copy framework selection:
    - formal + professional → **enterprise** style, **AIDA** framework
    - casual + friendly → **bold-startup** style, **BAB** framework
    - professional + authoritative → **dark-saas** style, **PAS** framework
