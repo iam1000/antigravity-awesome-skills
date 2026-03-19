@@ -30,7 +30,10 @@ This release closes the post-`v8.2.0` maintainer batch and includes the merged `
 
 ## 👥 Credits
 
-- Contributors in merged PRs #341, #352, #353, #358, and #359.
+- **[@halith-smh](https://github.com/halith-smh)** for `landing-page-generator` in PR #341
+- **[@Champbreed](https://github.com/Champbreed)** for metadata fixes in PR #352 and PR #353 (`advanced-evaluation`, `agentic-auditor`)
+- **[@AssassinMaeve](https://github.com/AssassinMaeve)** for `Activation skills` in PR #358
+- **[@majorelalexis-stack](https://github.com/majorelalexis-stack)** for `MAXIA AI-to-AI` updates in PR #359
 
 _Upgrade now: `git pull origin main` to fetch the latest skills._
 
