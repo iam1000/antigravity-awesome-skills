@@ -2080,12 +2080,21 @@
       } catch (e) { return null; }
     }
     function buildEmbedUrl(url, autoplay = false) {
+      if (!isAllowedSoundCloudUrl(url)) {
+        console.warn("[PlayerGuard] buildEmbedUrl blocked invalid url", { url });
+        return "about:blank";
+      }
       return "https://w.soundcloud.com/player/?url=" + encodeURIComponent(url) + "&auto_play=" + !!autoplay + "&color=%238b5cf6&visual=true&show_comments=false";
     }
     function widgetLoad(url, autoplay = false, force = false) {
       console.log("widgetLoad", url, autoplay, force);
       const now = Date.now();
       const PLAYBACK_CHALLENGE_COOLDOWN_MS = 10 * 60 * 1000;
+      if (!isAllowedSoundCloudUrl(url)) {
+        console.warn("[PlayerGuard] widgetLoad blocked", { url });
+        try { if (playerFrame) playerFrame.src = "about:blank"; } catch { }
+        return;
+      }
       if (playbackLimited && !force) {
         if (playbackHint) playbackHint.textContent = "Playback limited — open on SoundCloud or retry later.";
         return;
@@ -2107,6 +2116,101 @@
       }
     }
     function widgetPause() { const w = ensureWidget(); try { w && w.pause(); } catch { } }
+
+    // Source-aware rerender used to prevent nested UI regressions.
+    function rerenderCurrentPlayer(autoplay = true, force = false) {
+      const item = currentItem;
+      if (!item) return;
+
+      const itemSource = (item._source || item.sourceId || "").toString();
+      const uploadsCandidateUrl = item.playableUrl || item.url || "";
+      const soundcloudCandidateUrl = item.url || item.openUrl || "";
+
+      // Prefer source-specific rendering paths; never trust `item.url` alone.
+      if (itemSource === "uploads") {
+        if (!PRODUCTION_UPLOADS_ENABLED || !isAllowedUploadsAudioUrl(uploadsCandidateUrl)) {
+          console.warn("[PlayerGuard] rerenderCurrentPlayer uploads blocked", { url: uploadsCandidateUrl });
+          setStatus("Unable to play this item.");
+          try {
+            const uploadsWrap = document.getElementById("playerUploadsWrap");
+            if (uploadsWrap) uploadsWrap.style.display = "none";
+            const audioEl = document.getElementById("playerUploadsAudio");
+            if (audioEl) {
+              audioEl.pause();
+              audioEl.removeAttribute("src");
+            }
+            if (playerFrame) {
+              playerFrame.style.display = "none";
+              playerFrame.src = "about:blank";
+            }
+          } catch { }
+          return;
+        }
+
+        console.log("[PlayerGuard] rerenderCurrentPlayer uploads", { url: uploadsCandidateUrl });
+        try { if (typeof widgetPause === "function") widgetPause(); } catch { }
+        try {
+          const uploadsWrap = document.getElementById("playerUploadsWrap");
+          const audioEl = document.getElementById("playerUploadsAudio");
+          if (uploadsWrap) uploadsWrap.style.display = "block";
+          if (playerFrame) {
+            playerFrame.style.display = "none";
+            playerFrame.src = "about:blank";
+          }
+          if (audioEl) {
+            audioEl.pause();
+            audioEl.currentTime = 0;
+            audioEl.removeAttribute("src");
+            audioEl.src = uploadsCandidateUrl;
+            audioEl.autoplay = !!autoplay;
+            if (autoplay) audioEl.play().catch(() => {});
+          }
+        } catch { }
+        return;
+      }
+
+      if (itemSource === "soundcloud") {
+        if (!isAllowedSoundCloudUrl(soundcloudCandidateUrl)) {
+          console.warn("[PlayerGuard] rerenderCurrentPlayer soundcloud blocked", { url: soundcloudCandidateUrl });
+          setStatus("Unable to play this item.");
+          try {
+            const uploadsWrap = document.getElementById("playerUploadsWrap");
+            if (uploadsWrap) uploadsWrap.style.display = "none";
+            if (playerFrame) {
+              playerFrame.style.display = "";
+              playerFrame.src = "about:blank";
+            }
+          } catch { }
+          return;
+        }
+
+        console.log("[PlayerGuard] rerenderCurrentPlayer soundcloud", { url: soundcloudCandidateUrl });
+        try {
+          const uploadsWrap = document.getElementById("playerUploadsWrap");
+          if (uploadsWrap) uploadsWrap.style.display = "none";
+          if (playerFrame) playerFrame.style.display = "";
+          widgetLoad(soundcloudCandidateUrl, !!autoplay, !!force);
+        } catch { }
+        return;
+      }
+
+      // Unknown/missing source: fail closed.
+      console.warn("[PlayerGuard] rerenderCurrentPlayer blocked mismatched source/url", { itemSource });
+      setStatus("Unable to play this item.");
+      try {
+        const uploadsWrap = document.getElementById("playerUploadsWrap");
+        if (uploadsWrap) uploadsWrap.style.display = "none";
+        const audioEl = document.getElementById("playerUploadsAudio");
+        if (audioEl) {
+          audioEl.pause();
+          audioEl.removeAttribute("src");
+        }
+        if (playerFrame) {
+          playerFrame.style.display = "none";
+          playerFrame.src = "about:blank";
+        }
+      } catch { }
+    }
 
     function setProgress(msg) { progressLine.textContent = msg || ""; }
 
@@ -4715,7 +4819,7 @@
         playbackLimited = false;
         playbackErrorCount = 0;
         if (playbackHint) playbackHint.textContent = "Retrying in-app playback…";
-        widgetLoad(currentItem.url, true, true);
+        rerenderCurrentPlayer(true, true);
       };
     }
 
@@ -4967,7 +5071,8 @@
 
       resetContext();
 
-      playerFrame.src = buildEmbedUrl(SEED_LIBRARY[0].url);
+      playerFrame.src = "about:blank";
+      rerenderCurrentPlayer(false, true);
       ensureWidget();
 
       try {
