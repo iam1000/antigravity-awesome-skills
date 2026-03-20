@@ -5126,6 +5126,45 @@
         // Ensure we don't start in a disabled/stuck state.
         setProductionUploadBusy(false);
 
+        async function uploadToSupabaseStorageDirect({ path, file, token, contentType }) {
+          const sb = getRplusSupabaseClient();
+          const url =
+            (sb?.storageUrl || sb?.storage?.url || null) ||
+            (sb?.supabaseUrl ? `${sb.supabaseUrl}/storage/v1` : null) ||
+            (typeof SUPA_URL !== "undefined" ? `${SUPA_URL}/storage/v1` : null);
+
+          const anonKey =
+            (typeof SUPA_KEY !== "undefined" ? SUPA_KEY : null) ||
+            (window.__RPLUS_ENV__ && window.__RPLUS_ENV__.SUPABASE_ANON_KEY) ||
+            null;
+
+          if (!url) throw new Error("storage_url_missing");
+          if (!anonKey) throw new Error("storage_anon_key_missing");
+          if (!token) throw new Error("storage_token_missing");
+
+          const objectUrl = `${url}/object/uploads/${path}`;
+
+          const res = await fetch(objectUrl, {
+            method: "POST",
+            headers: {
+              apikey: anonKey,
+              authorization: `Bearer ${token}`,
+              "x-upsert": "true",
+              "content-type": contentType || "audio/mpeg"
+            },
+            body: file
+          });
+
+          let text = "";
+          try { text = await res.text(); } catch (_) {}
+
+          if (!res.ok) {
+            throw new Error(`storage_upload_failed:${res.status}:${text || res.statusText}`);
+          }
+
+          return { ok: true, status: res.status, body: text };
+        }
+
         productionUploadBtn.onclick = () => { productionUploadInput.click(); };
         productionUploadInput.onchange = async () => {
           const file = productionUploadInput.files && productionUploadInput.files[0];
@@ -5186,17 +5225,21 @@
             setProdStatus("Uploading...");
             console.log("[Production][Upload] storage start", { path: prep.path });
             const STORAGE_UPLOAD_TIMEOUT_MS = 15000;
-            const storageUploadResp = await Promise.race([
-              rplusSupabase.storage.from("uploads").upload(prep.path, file, { contentType: file.type || "audio/mpeg", upsert: true }),
-              new Promise((_, rej) => setTimeout(() => rej(new Error("storage_upload_timeout")), STORAGE_UPLOAD_TIMEOUT_MS))
-            ]);
-            const { error: upErr } = storageUploadResp;
-            if (upErr) {
-              console.log("[Production][Upload] storage failed", { error: upErr?.message || upErr });
-              setProdStatus("Upload failed.");
-              return;
+            try {
+              await Promise.race([
+                uploadToSupabaseStorageDirect({
+                  path: prep.path,
+                  file,
+                  token,
+                  contentType: file.type || "audio/mpeg"
+                }),
+                new Promise((_, rej) => setTimeout(() => rej(new Error("storage_upload_timeout")), STORAGE_UPLOAD_TIMEOUT_MS))
+              ]);
+              console.log("[Production][Upload] storage ok");
+            } catch (e) {
+              console.log("[Production][Upload] storage failed", { error: e && e.message ? e.message : e });
+              throw e;
             }
-            console.log("[Production][Upload] storage ok");
 
             const publicUrl = rplusSupabase.storage.from("uploads").getPublicUrl(prep.path).data.publicUrl;
             let durationMs = null;
