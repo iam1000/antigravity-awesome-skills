@@ -29,7 +29,7 @@ exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
     return json(
       405,
-      { error: "method_not_allowed", message: "Use POST." },
+      { error: "method_not_allowed", message: "Use POST. uploads-prepare-v2" },
       allowOrigin(origin) || "*"
     );
   }
@@ -62,6 +62,7 @@ exports.handler = async function (event) {
       filename,
       path
     });
+    console.log("[uploads-prepare] version uploads-prepare-v2");
 
     return json(
       200,
@@ -78,7 +79,7 @@ exports.handler = async function (event) {
       500,
       {
         error: "prepare_failed",
-        message: err && err.message ? err.message : "Unknown prepare error"
+        message: `prepare_failed_v2: ${err && err.message ? err.message : "Unknown prepare error"}`
       },
       allowOrigin(origin) || "*"
     );
