@@ -204,6 +204,16 @@
       background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02));
     }
 
+    .topbar-secondary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 4px 14px;
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
+
     .left,
     .right {
       display: flex;
@@ -219,7 +229,7 @@
 
     #vibeInput {
       width: 100%;
-      max-width: 220px;
+      max-width: 360px;
       min-width: 120px;
     }
 
@@ -1020,18 +1030,25 @@
             </select>
           </div>
 
-          <button id="shuffleBtn" class="btnPrimary">Shuffle</button>
-        </div>
+          <div class="field">
+            <select id="sourceSelect" title="Source">
+              <option value="both" selected>Tracks + Sets</option>
+              <option value="track">Tracks (≤ 6:00)</option>
+              <option value="set">Sets (≥ 10:00)</option>
+            </select>
+          </div>
 
-        <div class="right">
-          <button id="themeBtn" class="btn" title="Toggle Theme">Theme</button>
           <div class="field">
             <select id="stationSelect" title="Station">
               <option value="__all__" selected>Station: Off</option>
             </select>
           </div>
+
           <button id="makeStationBtn" class="btn" disabled>Station</button>
-          <div class="field" style="flex:1 1 160px; min-width:100px; max-width:260px;">
+        </div>
+
+        <div class="right">
+          <div class="field" style="flex:1 1 160px; min-width:100px; max-width:360px;">
             <input
               id="vibeInput"
               name="vibe_query"
@@ -1043,16 +1060,21 @@
               inputmode="search"
             />
           </div>
-          <button id="vibeBtn" class="btn" title="Vibe Search">Vibe</button>
-          <select id="vibePresetSelect" class="miniSelect" style="display:none; max-width:180px; font-size:11px;" title="Vibe presets"></select>
-          <button id="vibePresetManageBtn" class="btn" style="display:none; font-size:11px; padding:4px 6px;" title="Rename, pin, or delete selected vibe preset">✎</button>
-          <button id="saveSessionBtn" class="btn" style="font-size:11px; padding:4px 6px;" title="Save this dig session for later">Save dig</button>
-          <select id="sessionSelect" class="miniSelect" style="display:none; max-width:160px; font-size:11px;" title="Reopen a saved dig session"></select>
-          <button id="openDrawerBtn" class="btn dots" title="More">⋯</button>
+          <button id="shuffleBtn" class="btnPrimary">Shuffle</button>
         </div>
+      </div>
+
+      <!-- Secondary toolbar: theme, presets, session tools, account -->
+      <div class="topbar-secondary">
+        <button id="themeBtn" class="miniBtn" title="Toggle Theme">Theme</button>
+        <select id="vibePresetSelect" class="miniSelect" style="display:none; max-width:180px; font-size:11px;" title="Vibe presets"></select>
+        <button id="vibePresetManageBtn" class="miniBtn" style="display:none; padding:4px 8px;" title="Rename, pin, or delete selected vibe preset">✎</button>
+        <button id="saveSessionBtn" class="miniBtn" style="padding:4px 8px;" title="Save this dig session for later">Save dig</button>
+        <select id="sessionSelect" class="miniSelect" style="display:none; max-width:160px; font-size:11px;" title="Reopen a saved dig session"></select>
+        <button id="openDrawerBtn" class="miniBtn dots" title="More">⋯</button>
         <!-- Auth: permanent static markup. Do not remove/replace #accountBtn or slot children in JS. -->
         <span id="topbar-auth-slot" style="display:inline-flex; flex-shrink:0; align-items:center; gap:10px; max-width:160px; min-width:0;">
-          <button id="accountBtn" class="btn" type="button">Sign In</button>
+          <button id="accountBtn" class="miniBtn" type="button">Sign In</button>
         </span>
       </div>
 
@@ -1110,13 +1132,6 @@
             </div>
             <div class="drawerBody" id="drawerBody">
               <div class="row">
-                <div class="field">
-                  <select id="sourceSelect" title="Source">
-                    <option value="both" selected>Tracks + Sets</option>
-                    <option value="track">Tracks (≤ 6:00)</option>
-                    <option value="set">Sets (≥ 10:00)</option>
-                  </select>
-                </div>
 
                 <div class="rangeWrap" title="Higher = tighter digging bias">
                   <label>dig</label>
@@ -4340,7 +4355,7 @@
         lastShuffleAt = Date.now();
         shuffleInFlight = false;
         shuffleBtn.disabled = false;
-        shuffleBtn.textContent = "Shuffle";
+        shuffleBtn.textContent = vibeInput?.value?.trim() ? "Dig" : "Shuffle";
         nextArrow.style.pointerEvents = "";
         if (pendingShuffle) {
           pendingShuffle = false;
@@ -4809,18 +4824,12 @@
 
     exportBtn.onclick = downloadExport;
 
-    if (vibeBtn && vibeInput) {
-      vibeBtn.onclick = () => {
-        if (window.SC_OK === false) return;
-        try { sendClientEvent("vibe_search_used", {}); } catch { }
-        runVibeSearch();
-      };
+    if (vibeInput) {
+      vibeInput.addEventListener("input", () => {
+        if (shuffleBtn) shuffleBtn.textContent = vibeInput.value.trim() ? "Dig" : "Shuffle";
+      });
       vibeInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          if (window.SC_OK === false) return;
-          try { sendClientEvent("vibe_search_used", {}); } catch { }
-          runVibeSearch();
-        }
+        if (e.key === "Enter") { e.preventDefault(); shuffleBtn?.click(); }
       });
     }
 
