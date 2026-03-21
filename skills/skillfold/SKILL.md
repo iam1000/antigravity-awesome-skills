@@ -84,7 +84,7 @@ Generate an interactive graph visualization:
 npx skillfold graph --html > pipeline.html
 ```
 
-### Step 6: Run the Pipeline
+### Step 6: Run the Pipeline (Optional)
 
 Execute the pipeline end-to-end with an agent spawner:
 
@@ -92,47 +92,34 @@ Execute the pipeline end-to-end with an agent spawner:
 npx skillfold run --target claude-code
 ```
 
-Supports dry-run mode, checkpoint-based resume, conditional routing, loops with iteration guards, and parallel map execution.
+> **Prerequisite:** `skillfold run` requires the [Claude CLI](https://docs.anthropic.com/en/docs/claude-code) (`claude`) to be installed and authenticated. The default `cli` spawner invokes `claude` directly; the alternate `sdk` spawner requires the optional `@anthropic-ai/claude-agent-sdk` peer dependency.
+
+Supports dry-run mode (`--dry-run`), checkpoint-based resume (`--resume`), conditional routing, loops with iteration guards, and parallel map execution.
 
 ## Config Structure
 
 A `skillfold.yaml` has four top-level sections:
 
 ```yaml
-resources:
-  github: https://github.com/org/repo
-
 skills:
   atomic:
-    planning: skills/planning
-    code-writing: skills/code-writing
+    planning: ./skills/planning
+    coding: ./skills/coding
   composed:
     engineer:
-      extends: [planning, code-writing]
+      compose: [planning, coding]
+      description: "Plans and implements code changes"
 
 state:
-  schema:
-    task: string
-    status: string
-    code: string
+  task:
+    type: string
 
 team:
   flow:
-    planner:
-      skill: engineer
-      writes: [task, status]
-      then: reviewer
-    reviewer:
-      skill: engineer
-      reads: [task, code]
-      writes: [status]
-      then:
-        - when: status == "approved"
-          then: done
-        - when: status == "needs-changes"
-          then: planner
-    done:
-      terminal: true
+    - engineer:
+        reads: [state.task]
+        writes: [state.task]
+      then: end
 ```
 
 ## Key Features
