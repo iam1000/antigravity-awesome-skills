@@ -35,7 +35,9 @@ void processData(std::vector<std::string>&& data) {
 ```
 ## 5. Modern STL Algorithms
 Prefer algorithms over manual loops for readability and optimization.
+
 ```cpp
-// Use std::ranges (C++20) for cleaner, safer iteration
-std::ranges::sort(myVector);
-```
+void sortData(std::vector<int>& myVector) {
+    // Use std::ranges (C++20) for cleaner, safer iteration
+    std::ranges::sort(myVector);
+}
