@@ -17,15 +17,19 @@ Use this skill when developing or debugging scripts and automation that run on W
 
 ## 1. Encoding & Redirection
 
-### CRITICAL: UTF-16LE Output
-Many Windows tools (like `dotnet build` or `npm`) output in UTF-16LE or other encodings that can break subsequent processing.
+### CRITICAL: Redirection Differences Across PowerShell Versions
+Older Windows PowerShell releases can rewrite native-command output in ways that break
+later processing. PowerShell 7.4+ preserves the byte stream when redirecting stdout,
+so only apply the UTF-8 conversion workaround when you are dealing with older shell
+behavior or a log file that is already unreadable.
 
 | Problem | Symptom | Solution |
 |---------|---------|----------|
-| `dotnet > log.txt` | `view_file` fails | `Get-Content log.txt | Set-Content -Encoding utf8 log_utf8.txt` |
-| `npm run > log.txt` | Encoding error | Use PowerShell piping: `npm run ... | Out-File -Encoding UTF8 log.txt` |
+| `dotnet > log.txt` | `view_file` fails in older Windows PowerShell | `Get-Content log.txt | Set-Content -Encoding utf8 log_utf8.txt` |
+| `npm run > log.txt` | Need a UTF-8 text log with errors included | `npm run ... 2>&1 | Out-File -Encoding UTF8 log.txt` |
 
-**Rule:** Always convert redirected output to UTF-8 if it needs to be read back or processed by other tools.
+**Rule:** Prefer native redirection as-is on PowerShell 7.4+, and use explicit UTF-8
+conversion only when older Windows PowerShell redirection produces an unreadable log.
 
 ---
 
@@ -71,7 +75,7 @@ In PowerShell, if an executable path starts with a quote, you MUST use the `&` o
 |---------|---------|-----|
 | Fast Iteration | `dotnet build --no-restore` | Skips redundant nuget restore. |
 | Clean Build | `dotnet build --no-incremental` | Ensures no stale artifacts. |
-| Background | `dotnet run > output.txt 2>&1` | Captures both stdout and stderr. |
+| Background | `Start-Process dotnet -ArgumentList 'run' -RedirectStandardOutput output.txt -RedirectStandardError error.txt` | Launches the app without blocking the shell and keeps logs. |
 
 ---
 
@@ -98,6 +102,6 @@ Windows has a 260-character path limit by default.
 |-------|-------------|-----|
 | `The term 'xxx' is not recognized` | Path not in $env:PATH | Use absolute path or fix PATH. |
 | `Access to the path is denied` | File in use or permissions | Stop process or run as Admin. |
-| `Encoding mismatch` | UTF-16 output | Use `Out-File -Encoding UTF8`. |
+| `Encoding mismatch` | Older shell redirection rewrote the output | Re-export the file as UTF-8 or capture with `2>&1 | Out-File -Encoding UTF8`. |
 
 ---
