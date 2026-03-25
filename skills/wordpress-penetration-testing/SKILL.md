@@ -1,6 +1,6 @@
 ---
 name: wordpress-penetration-testing
-description: "Conduct comprehensive security assessments of WordPress installations including enumeration of users, themes, and plugins, vulnerability scanning, credential attacks, and exploitation techniques. Includes WordPress 7.0 security considerations for RTC, AI Connectors, Abilities API, and new attack surfaces."
+description: "Assess WordPress installations for common vulnerabilities and WordPress 7.0 attack surfaces."
 risk: unknown
 source: community
 author: zebbern
