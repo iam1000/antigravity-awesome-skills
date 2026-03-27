@@ -306,6 +306,7 @@ These skills are continuously reviewed and hardened, but the collection is not "
 - [Smart PR Review](https://github.com/fullstackcrew-alpha/skill-smart-pr-review) - Opinionated AI code reviewer with 6-layer deep review, Devil's Advocate mode, MUST FIX/SHOULD FIX/SUGGESTION output.
 - [HubSpot Admin Skills](https://github.com/TomGranot/hubspot-admin-skills) - 32 Claude Code skills for auditing, cleaning, enriching, and automating HubSpot CRM. Includes Python scripts, Breeze AI workflow prompts, and a full audit → plan → execute → maintain flow.
 - [Tutor Skills](https://github.com/RoundTable02/tutor-skills) - Transform PDFs, docs, and codebases into Obsidian study vaults with interactive quiz-based learning and proficiency tracking.
+- [CoinPaprika & DexPaprika Skills](https://github.com/coinpaprika/skills) - Two crypto data skills: CoinPaprika (12K+ coins, 350+ exchanges, OHLCV, tickers) and DexPaprika (34 chains, 30M+ DEX pools, real-time streaming). Free, no API key. Install: `npx skills add github.com/coinpaprika/skills`
 
 ## Three Real Examples
 
